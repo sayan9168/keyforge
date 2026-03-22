@@ -330,3 +330,195 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22p
     </div>
   </div>
         </div>
+<script>
+const cur = document.getElementById('cursor');
+const curRing = document.getElementById('cursor-ring');
+let mx=0, my=0, rx=0, ry=0;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
+function animRing() { rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12; curRing.style.left=rx+'px'; curRing.style.top=ry+'px'; requestAnimationFrame(animRing); }
+animRing();
+document.querySelectorAll('button,input,a,[onclick]').forEach(el => {
+  el.addEventListener('mouseenter', () => { cur.style.width='20px'; cur.style.height='20px'; curRing.style.width='50px'; curRing.style.height='50px'; });
+  el.addEventListener('mouseleave', () => { cur.style.width='12px'; cur.style.height='12px'; curRing.style.width='36px'; curRing.style.height='36px'; });
+});
+
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles=[];
+function resize() { W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+class Particle {
+  constructor() { this.reset(); }
+  reset() { this.x=Math.random()*W; this.y=Math.random()*H; this.vx=(Math.random()-0.5)*0.4; this.vy=(Math.random()-0.5)*0.4; this.r=Math.random()*1.5+0.5; this.alpha=Math.random()*0.4+0.1; this.color=Math.random()>0.7?'#e8ff47':Math.random()>0.5?'#2de8ff':'#b56cff'; }
+  update() { this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>W||this.y<0||this.y>H) this.reset(); }
+  draw() { ctx.save(); ctx.globalAlpha=this.alpha; ctx.fillStyle=this.color; ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+}
+for(let i=0;i<120;i++) particles.push(new Particle());
+function animCanvas() {
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<particles.length;i++) {
+    for(let j=i+1;j<particles.length;j++) {
+      const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<100) { ctx.save(); ctx.globalAlpha=(1-d/100)*0.08; ctx.strokeStyle='#e8ff47'; ctx.lineWidth=0.5; ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y); ctx.stroke(); ctx.restore(); }
+    }
+  }
+  particles.forEach(p=>{p.update();p.draw();});
+  requestAnimationFrame(animCanvas);
+}
+animCanvas();
+
+let stats={checked:0,generated:0,copied:0};
+function updateStat(key) { stats[key]++; animCount(document.getElementById('stat-'+key),stats[key]); }
+function animCount(el,target) { const start=parseInt(el.textContent)||0; const duration=400; const startTime=performance.now(); function step(now) { const p=Math.min((now-startTime)/duration,1); el.textContent=Math.round(start+(target-start)*p); if(p<1) requestAnimationFrame(step); } requestAnimationFrame(step); }
+
+function switchTab(name,btn) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); btn.classList.add('active'); document.getElementById('panel-'+name).classList.add('active'); }
+
+let eyeVisible=false;
+function toggleEye() { eyeVisible=!eyeVisible; const inp=document.getElementById('mainPwInput'); inp.type=eyeVisible?'text':'password'; document.getElementById('eyeBtn').textContent=eyeVisible?'🙈':'👁'; }
+
+function calcEntropy(pw) { let c=0; if(/[a-z]/.test(pw)) c+=26; if(/[A-Z]/.test(pw)) c+=26; if(/[0-9]/.test(pw)) c+=10; if(/[^a-zA-Z0-9]/.test(pw)) c+=32; if(!c) return 0; return Math.round(pw.length*Math.log2(c)); }
+function calcCharset(pw) { let n=0; if(/[a-z]/.test(pw)) n+=26; if(/[A-Z]/.test(pw)) n+=26; if(/[0-9]/.test(pw)) n+=10; if(/[^a-zA-Z0-9]/.test(pw)) n+=32; return n; }
+function crackTime(pw) { const c=calcCharset(pw)||26; const combos=Math.pow(c,pw.length); const sec=combos/1e10; if(sec<1) return 'Instant ⚡'; if(sec<60) return Math.round(sec)+' seconds'; if(sec<3600) return Math.round(sec/60)+' minutes'; if(sec<86400) return Math.round(sec/3600)+' hours'; if(sec<31536000) return Math.round(sec/86400)+' days'; if(sec<3.15e9) return Math.round(sec/31536000)+' years'; if(sec<3.15e12) return (sec/3.15e9).toFixed(1)+'K years'; if(sec<3.15e15) return (sec/3.15e12).toFixed(1)+'M years'; if(sec<3.15e18) return (sec/3.15e15).toFixed(1)+'B years'; return '∞ Uncrackable 🔒'; }
+function getStrengthScore(pw) { let s=0; if(pw.length>=8) s++; if(/[A-Z]/.test(pw)&&/[a-z]/.test(pw)) s++; if(/[0-9]/.test(pw)) s++; if(/[^a-zA-Z0-9]/.test(pw)||pw.length>=16) s++; return s; }
+
+function detectPatterns(pw) {
+  const tags=[];
+  if(!pw) return tags;
+  if(/(.)\\1{2,}/.test(pw)) tags.push({text:'Repeated chars',type:'bad'});
+  if(/012|123|234|345|456|567|678|789|890/.test(pw)) tags.push({text:'Sequential digits',type:'bad'});
+  if(/abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz/i.test(pw)) tags.push({text:'Sequential letters',type:'bad'});
+  if(/qwerty|asdf|zxcv|qazwsx/i.test(pw)) tags.push({text:'Keyboard pattern',type:'bad'});
+  if(/password|pass|letmein|welcome|admin|login|user/i.test(pw)) tags.push({text:'Common word',type:'bad'});
+  if(pw.length>=20) tags.push({text:'Long ✓',type:'good'});
+  else if(pw.length>=16) tags.push({text:'Good length ✓',type:'ok'});
+  if(/[^a-zA-Z0-9]/.test(pw)) tags.push({text:'Has symbols ✓',type:'good'});
+  if(/[0-9]/.test(pw)&&/[a-zA-Z]/.test(pw)) tags.push({text:'Mixed types ✓',type:'ok'});
+  const ent=calcEntropy(pw);
+  tags.push({text:ent+' bits entropy',type:ent>=80?'good':ent>=50?'ok':'bad'});
+  return tags;
+}
+
+function generateSuggestion(pw) { if(!pw) return ''; const syms='!@#$%^&*'; let s=pw; s+=syms[Math.floor(Math.random()*syms.length)]; s+=Math.floor(Math.random()*90+10); if(s.length<16) s+=Math.random().toString(36).slice(2,6); return s.slice(0,24); }
+
+function analyzePassword(pw) {
+  document.getElementById('charCount').textContent=pw.length+' chars';
+  updateStat('checked');
+  const c={len:pw.length>=8,upper:/[A-Z]/.test(pw),lower:/[a-z]/.test(pw),num:/[0-9]/.test(pw),sym:/[^a-zA-Z0-9]/.test(pw),long:pw.length>=16};
+  const critMap={len:'cr-len',upper:'cr-upper',lower:'cr-lower',num:'cr-num',sym:'cr-sym',long:'cr-long'};
+  Object.entries(c).forEach(([k,v])=>{ const el=document.getElementById(critMap[k]); el.classList.toggle('met',v); el.classList.toggle('warn',!v&&pw.length>0); });
+  const score=getStrengthScore(pw);
+  const scoreColors=['','#ff2d6b','#ff8c00','#2de8ff','#e8ff47'];
+  const scoreLabels=['','WEAK','FAIR','GOOD','STRONG'];
+  document.querySelectorAll('.bar-seg').forEach((b,i)=>{ b.style.background=i<score&&pw.length>0?scoreColors[score]:'var(--border2)'; });
+  const stEl=document.getElementById('strengthText');
+  stEl.textContent=pw.length>0?scoreLabels[score]:'—';
+  stEl.style.color=pw.length>0?scoreColors[score]:'var(--muted)';
+  const ent=calcEntropy(pw);
+  document.getElementById('entropyVal').textContent=ent;
+  document.getElementById('entropyFill').style.width=pw.length>0?Math.min(ent/128*100,100)+'%':'0%';
+  const crackEl=document.getElementById('crackTimeVal');
+  crackEl.textContent=pw.length>0?crackTime(pw):'—';
+  crackEl.className='info-card-val '+(score>=3?'safe':score>=2?'neutral':'danger');
+  document.getElementById('charsetVal').textContent=pw.length>0?calcCharset(pw)+' chars':'—';
+  const pTags=detectPatterns(pw);
+  const pContainer=document.getElementById('patternTags');
+  if(pw.length===0){ pContainer.innerHTML='<span class="pattern-tag info">Type a password to analyze…</span>'; }
+  else { pContainer.innerHTML=pTags.map(t=>'<span class="pattern-tag '+t.type+'">'+t.text+'</span>').join(''); }
+  const slist=document.getElementById('suggestedList');
+  if(pw.length<6){ slist.innerHTML='<div style="font-size:13px;color:var(--muted);font-family:var(--font-mono);">Suggestions appear after analysis…</div>'; }
+  else {
+    const sug1=generateSuggestion(pw);
+    const sug2=generateSuggestion(pw.split('').reverse().join(''));
+    const sug3=generateRandomPw(18);
+    slist.innerHTML=[sug1,sug2,sug3].map(s=>'<div class="similar-item"><span class="similar-pw">'+s+'</span><span class="similar-strength sim-strong">STRONG</span><button class="hist-btn" onclick="copyText(\''+s+'\')">Copy</button></div>').join('');
+  }
+}
+</script>
+<script>
+let genMode='random';
+let genOpts={upper:true,lower:true,num:true,sym:true,ambig:false,brackets:false};
+const pwHistory=[];
+const wordlist=['apple','brave','cloud','dance','eagle','flame','grace','honey','ivory','jungle','karma','lunar','magic','noble','ocean','pearl','quest','river','storm','tiger','ultra','vivid','water','xenon','yacht','zesty','amber','blaze','crisp','drift','ember','frost','gleam','haven','jazz','knack','lemon','mango','nexus','onyx','plush','quartz','rustic','solar','tidal','urban','velvet','whale','yonder','zeal'];
+
+function setGenMode(mode,btn) { genMode=mode; document.querySelectorAll('.mode-pill').forEach(p=>p.classList.remove('active')); btn.classList.add('active'); document.getElementById('random-opts').style.display=mode==='random'?'block':'none'; document.getElementById('passphrase-opts').style.display=mode==='passphrase'?'block':'none'; document.getElementById('pin-opts').style.display=mode==='pin'?'block':'none'; document.getElementById('pattern-opts').style.display=mode==='pattern'?'block':'none'; liveGenPreview(); }
+function toggleOpt(el,key) { el.classList.toggle('on'); genOpts[key]=el.classList.contains('on'); liveGenPreview(); }
+function liveGenPreview() { const pw=buildPassword(); if(!pw) return; updateGenOutput(pw,false); }
+
+function buildPassword() {
+  if(genMode==='pin') { const len=parseInt(document.getElementById('pinRange').value); return Array.from({length:len},()=>Math.floor(Math.random()*10)).join(''); }
+  if(genMode==='passphrase') { const n=parseInt(document.getElementById('wordsRange').value); return Array.from({length:n},()=>wordlist[Math.floor(Math.random()*wordlist.length)]).join('-'); }
+  if(genMode==='pattern') { const pattern=document.getElementById('patternInput').value||'LLllddss'; let result=''; for(const ch of pattern){ if(ch==='L') result+='ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random()*26)]; else if(ch==='l') result+='abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]; else if(ch==='d') result+='0123456789'[Math.floor(Math.random()*10)]; else if(ch==='s') result+='!@#$%^&*'[Math.floor(Math.random()*8)]; else result+=ch; } return result; }
+  return generateRandomPw(parseInt(document.getElementById('lenRange').value));
+}
+
+function generateRandomPw(len) {
+  const ambig='0O1lI'; let chars=''; let required='';
+  if(genOpts.upper){ let c='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; if(genOpts.ambig) c=c.split('').filter(x=>!ambig.includes(x)).join(''); chars+=c; required+=c[Math.floor(Math.random()*c.length)]; }
+  if(genOpts.lower){ let c='abcdefghijklmnopqrstuvwxyz'; if(genOpts.ambig) c=c.split('').filter(x=>!ambig.includes(x)).join(''); chars+=c; required+=c[Math.floor(Math.random()*c.length)]; }
+  if(genOpts.num){ let c='0123456789'; if(genOpts.ambig) c=c.split('').filter(x=>!ambig.includes(x)).join(''); chars+=c; required+=c[Math.floor(Math.random()*c.length)]; }
+  if(genOpts.sym){ const c='!@#$%^&*_-+='; chars+=c; required+=c[Math.floor(Math.random()*c.length)]; }
+  if(genOpts.brackets){ const c='[]{}()'; chars+=c; required+=c[Math.floor(Math.random()*c.length)]; }
+  if(!chars) return '';
+  let pw=required;
+  for(let i=required.length;i<len;i++) pw+=chars[Math.floor(Math.random()*chars.length)];
+  return pw.split('').sort(()=>Math.random()-0.5).join('');
+}
+
+function updateGenOutput(pw,addHistory=true) {
+  const el=document.getElementById('genPwText');
+  el.textContent=pw;
+  el.className='gen-pw-text'+(genMode==='passphrase'?' passphrase':'');
+  document.getElementById('genOutputCard').classList.add('generating');
+  setTimeout(()=>document.getElementById('genOutputCard').classList.remove('generating'),300);
+  const score=getStrengthScore(pw);
+  const ent=calcEntropy(pw);
+  const scoreColors=['','#ff2d6b','#ff8c00','#2de8ff','#e8ff47'];
+  const scoreLabels=['','Weak','Fair','Good','Strong'];
+  document.querySelectorAll('.gen-str-bar').forEach((b,i)=>{ b.style.background=i<score?scoreColors[score]:'var(--border2)'; });
+  document.getElementById('genStrLabel').textContent=pw?scoreLabels[score]:'—';
+  document.getElementById('genEntropyMini').textContent=ent+' bits';
+  if(addHistory){ pwHistory.unshift(pw); if(pwHistory.length>5) pwHistory.pop(); renderHistory(); }
+}
+
+function generatePw() { const pw=buildPassword(); if(!pw){toast('Enable at least one character set!');return;} updateGenOutput(pw,true); updateStat('generated'); }
+
+function renderHistory() {
+  const section=document.getElementById('historySection');
+  const list=document.getElementById('historyList');
+  if(pwHistory.length===0){section.style.display='none';return;}
+  section.style.display='block';
+  list.innerHTML=pwHistory.map(pw=>'<div class="history-item"><span class="history-pw">'+pw+'</span><div class="history-actions"><button class="hist-btn" onclick="copyText(\''+pw+'\')">Copy</button><button class="hist-btn" onclick="sendToChecker(\''+pw+'\')">Check</button></div></div>').join('');
+}
+
+function sendToChecker(pw) { const inp=document.getElementById('mainPwInput'); inp.value=pw; analyzePassword(pw); switchTab('checker',document.querySelector('.tab-btn')); toast('Sent to Checker!'); }
+function copyGen(e) { if(e) e.stopPropagation(); const pw=document.getElementById('genPwText').textContent; if(!pw||pw==='Press Generate →') return; copyText(pw); }
+function copyText(text) { navigator.clipboard.writeText(text).then(()=>{ updateStat('copied'); toast('Copied! 🎉'); }); }
+
+function runCompare() {
+  const a=document.getElementById('cmpA').value;
+  const b=document.getElementById('cmpB').value;
+  if(!a&&!b){document.getElementById('compareResult').classList.remove('show');return;}
+  document.getElementById('compareResult').classList.add('show');
+  const scoreA=getStrengthScore(a)*25, scoreB=getStrengthScore(b)*25;
+  const entA=calcEntropy(a), entB=calcEntropy(b);
+  const maxLen=Math.max(a.length,b.length,1);
+  document.getElementById('cmpStrScores').textContent='A: '+scoreA+'% vs B: '+scoreB+'%';
+  document.getElementById('cmpStrBarA').style.width=scoreA+'%';
+  document.getElementById('cmpStrBarB').style.width=scoreB+'%';
+  document.getElementById('cmpEntScores').textContent='A: '+entA+' vs B: '+entB+' bits';
+  document.getElementById('cmpEntBarA').style.width=(entA/Math.max(entA,entB,1)*100)+'%';
+  document.getElementById('cmpEntBarB').style.width=(entB/Math.max(entA,entB,1)*100)+'%';
+  document.getElementById('cmpLenScores').textContent='A: '+a.length+' vs B: '+b.length+' chars';
+  document.getElementById('cmpLenBarA').style.width=(a.length/maxLen*100)+'%';
+  document.getElementById('cmpLenBarB').style.width=(b.length/maxLen*100)+'%';
+  document.getElementById('winnerBadge').textContent=entA>entB?'🏆 Password A is stronger':entB>entA?'🏆 Password B is stronger':'🤝 Equal strength';
+}
+
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),2500); }
+
+liveGenPreview();
+</script>
+</body>
+</html>
