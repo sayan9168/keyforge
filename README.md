@@ -10,7 +10,7 @@ Advanced password intelligence tool built with HTML, CSS & JavaScript.
 - 💡 Security tips
 
 ## Live Demo
-[View Live](#)
+https://keyforge-sigma.vercel.app/
 
 ## Tech Stack
 HTML • CSS • Vanilla JavaScript
