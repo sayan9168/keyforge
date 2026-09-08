@@ -9,6 +9,7 @@ playwright-report/
 test-results/
 coverage/
 artifacts/
+work/
 
 # Local environment and editor files
 .env

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0e11" />
+    <meta
+      name="description"
+      content="Privacy policy for KeyForge Ultra by Sayanox Private Limited. KeyForge generates and analyzes passwords entirely in your browser — no account, no analytics, no server-side password storage."
+    />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+    <meta name="author" content="Sayan (sayan9168)" />
+    <meta name="publisher" content="Sayanox Private Limited" />
+    <meta name="referrer" content="no-referrer" />
+    <link rel="canonical" href="https://keyforge-sigma.vercel.app/privacy.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Sayanox Private Limited" />
+    <meta
+      property="og:title"
+      content="Privacy Policy — KeyForge Ultra by Sayanox Private Limited"
+    />
+    <meta
+      property="og:description"
+      content="KeyForge Ultra is a client-side password workspace. Passwords never leave your device unless you explicitly approve an optional breach lookup."
+    />
+    <meta property="og:url" content="https://keyforge-sigma.vercel.app/privacy.html" />
+    <meta name="twitter:card" content="summary" />
+    <title>Privacy Policy — KeyForge Ultra | Sayanox Private Limited</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0e11;
+        --panel: #14181d;
+        --panel-2: #191e24;
+        --text: #e9edf1;
+        --subtle: #9aa4ae;
+        --accent: #d5f95b;
+        --border-soft: #232a31;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+      }
+      .page {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 32px 20px 72px;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text);
+        text-decoration: none;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        font-size: 14px;
+      }
+      .brand img {
+        width: 26px;
+        height: 26px;
+      }
+      .brand-dot {
+        color: var(--accent);
+      }
+      .eyebrow {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: var(--accent);
+        text-transform: uppercase;
+        margin: 48px 0 8px;
+      }
+      h1 {
+        font-size: 34px;
+        line-height: 1.15;
+        margin: 0 0 8px;
+        letter-spacing: -0.5px;
+      }
+      .updated {
+        color: var(--subtle);
+        font-size: 13px;
+        margin-top: 0;
+      }
+      h2 {
+        font-size: 20px;
+        margin: 36px 0 10px;
+      }
+      p,
+      li {
+        color: #cdd4da;
+        font-size: 15.5px;
+      }
+      ul {
+        padding-left: 22px;
+      }
+      li {
+        margin: 6px 0;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border-soft);
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin: 18px 0;
+      }
+      a {
+        color: var(--accent);
+      }
+      hr {
+        border: 0;
+        border-top: 1px solid var(--border-soft);
+        margin: 40px 0 20px;
+      }
+      .footer-note {
+        color: var(--subtle);
+        font-size: 12.5px;
+      }
+      code {
+        background: var(--panel-2);
+        border: 1px solid var(--border-soft);
+        border-radius: 5px;
+        padding: 1px 6px;
+        font-size: 13px;
+      }
+      @media (max-width: 560px) {
+        h1 {
+          font-size: 26px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <a class="brand" href="./">
+        <img src="./favicon.svg" alt="" width="26" height="26" />KEYFORGE<span class="brand-dot"
+          >.</span
+        ></a
+      >
+      <p class="eyebrow">Privacy policy</p>
+      <h1>Your passwords stay with you.</h1>
+      <p class="updated">
+        Effective date: September 8, 2026 · Published by Sayanox Private Limited
+      </p>
+
+      <p>
+        KeyForge Ultra is a browser-based password security workspace. Its design goal is that
+        <strong>passwords never leave your device</strong>. This page explains exactly what the app
+        does and does not collect, in plain language.
+      </p>
+
+      <div class="card">
+        <strong>The short version:</strong> No account. No analytics. No cookies. No tracking. No
+        server-side password storage. Generation, strength analysis, and comparison run entirely in
+        your browser. The only external request is an <em>optional, explicitly approved</em> breach
+        lookup.
+      </div>
+
+      <h2>1. What runs on your device</h2>
+      <ul>
+        <li>Password generation uses the browser’s Web Crypto random number generator.</li>
+        <li>
+          Strength analysis runs locally using the zxcvbn-ts engine in a Web Worker — nothing is
+          sent to a server for analysis.
+        </li>
+        <li>Optional in-tab history is held in page memory only and is off until you enable it.</li>
+        <li>
+          Fonts, word lists, and application code are hosted with the app; no third-party assets are
+          loaded from other domains.
+        </li>
+      </ul>
+
+      <h2>2. The only external request (optional breach check)</h2>
+      <p>
+        The checker can ask Have I Been Pwned whether a password has appeared in public breach data.
+        This happens only after you tick an explicit consent box <em>and</em> click the check
+        button. The request sends only the first five characters of the password’s SHA-1 hash (a
+        k-anonymity prefix), never the password or full hash, and no cookies, cache, or referrer
+        header are attached. Because the lookup travels over the internet, the service and network
+        operators can still see your IP address and that prefix. You can cancel the request at any
+        time.
+      </p>
+
+      <h2>3. What we do not collect</h2>
+      <ul>
+        <li>No passwords, usernames, or secrets are written to any server by the app itself.</li>
+        <li>No analytics or telemetry scripts are included.</li>
+        <li>No advertising or third-party trackers.</li>
+        <li>No account system, and no profile is created for you.</li>
+        <li>No cookies are set by the application.</li>
+      </ul>
+      <p>
+        The static hosting provider may keep ordinary access logs (such as IP address, user agent,
+        and requested URL) as part of operating the site, as virtually all web hosts do.
+      </p>
+
+      <h2>4. Your control</h2>
+      <ul>
+        <li><strong>Clear session</strong> removes revealed passwords and resets the interface.</li>
+        <li>
+          <strong>History</strong> is disabled by default; disabling it or reloading clears the
+          in-tab list.
+        </li>
+        <li>Revealed passwords are hidden when the tab goes to the background.</li>
+      </ul>
+      <p>
+        JavaScript cannot guarantee that secrets are forensically erased from device memory, the
+        clipboard, or downloaded files. KeyForge is a generation and education tool, not a password
+        vault.
+      </p>
+
+      <h2>5. Children’s privacy</h2>
+      <p>
+        KeyForge is a general-purpose security tool and does not knowingly collect any personal
+        information from anyone, including children under 13. If you believe personal information
+        has reached us in error, contact us using the details below.
+      </p>
+
+      <h2>6. Contact</h2>
+      <p>
+        KeyForge Ultra is published by <strong>Sayanox Private Limited</strong>. Owner and lead
+        developer: <strong>Sayan</strong> (GitHub:
+        <a href="https://github.com/sayan9168">sayan9168</a>).
+      </p>
+      <ul>
+        <li>
+          Security reports:
+          <a href="https://github.com/sayan9168/keyforge/security">GitHub Security Advisories</a>
+        </li>
+        <li>
+          Project issues:
+          <a href="https://github.com/sayan9168/keyforge/issues">github.com/sayan9168/keyforge</a>
+        </li>
+      </ul>
+
+      <h2>7. Changes</h2>
+      <p>
+        If this policy changes materially, the updated version will be posted at this URL with a new
+        effective date. The privacy properties above (no tracking, no server-side password storage)
+        are core to the product and will not change without a prominent notice.
+      </p>
+
+      <hr />
+      <p class="footer-note">
+        © 2026 Sayanox Private Limited. KeyForge Ultra 3.0 · Forge smarter, stay safer.
+        <a href="./">← Back to KeyForge Ultra</a>
+      </p>
+    </div>
+  </body>
+</html>

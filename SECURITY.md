@@ -6,6 +6,9 @@ KeyForge is a browser-based generation and education tool, **not a password vaul
 
 Use GitHub’s **Security → Report a vulnerability** option if private reporting is enabled for this repository. If it is not available, open an issue asking for a private reporting channel without publishing exploit details or credentials. Never include real passwords, tokens, breach responses for private passwords, or user data in a report.
 
+The deployed site exposes a machine-readable `/.well-known/security.txt` that points to the same
+channels.
+
 ## Trust boundaries
 
 - The user must trust the app’s origin, application/dependency code, browser, extensions, and device.
@@ -65,7 +68,13 @@ Editing the password, withdrawing consent, cancelling, or clearing the session i
 
 - Secret-derived values are rendered with `textContent` and DOM APIs. No inline handlers, `innerHTML`, `eval`, or dynamic function construction are used. ESLint enforces these restrictions.
 - The production build uses a strict CSP: scripts/styles/fonts/workers are local; external connections are limited to HIBP. No third-party script or font CDN is required. The development server intentionally omits this CSP for Vite HMR.
-- Vercel adds no-referrer, nosniff, feature restrictions, and anti-framing headers. Other hosts should apply equivalent response headers in addition to the built-in CSP meta tag.
+- The deployment adds hardened response headers (see `vercel.json`, mirrored in the Vite preview
+  server): `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`,
+  `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy: same-origin`,
+  `Cross-Origin-Resource-Policy: same-origin`, and a restrictive `Permissions-Policy` — in
+  addition to the built-in CSP meta tag (scripts/styles/fonts/workers local, connections limited
+  to HIBP, `frame-ancestors 'none'`, `form-action 'none'`, `base-uri 'self'`). Other hosts should
+  apply equivalent response headers.
 - History is off by default, bounded to 10, held only in page memory, and masked. Opting out clears it. Opting in only retains future explicit generations.
 - Backgrounding the page or pressing Escape hides revealed inputs, generated outputs, and list rows. Clear session resets fields/results/counters/consent, clears history, closes export confirmation, revokes outstanding Blob URLs, cancels requests, and terminates workers.
 - Page-hide/back-forward-cache lifecycle handling also resets page secrets. This does not control external browser snapshots or extensions.

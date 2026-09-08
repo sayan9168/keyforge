@@ -6,4 +6,9 @@ artifacts/
 package-lock.json
 src/data/eff-words.json
 public/credits.txt
+public/robots.txt
+public/sitemap.xml
+public/sitemap-index.xml
+public/humans.txt
+public/.well-known/security.txt
 LICENSE

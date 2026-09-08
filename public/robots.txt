@@ -1,0 +1,16 @@
+# KeyForge Ultra — https://keyforge-sigma.vercel.app/
+# Owned and published by Sayanox Private Limited.
+# Owner: Sayan (GitHub: sayan9168)
+
+# Crawl the whole site and index every page.
+User-agent: *
+Allow: /
+
+# KeyForge is fully client-side: no admin, no private paths to hide.
+
+# Block nothing for crawlers, but keep accidental sensitive fetches out of
+# analytics-style endpoints (there are none — this documents intent).
+
+# Primary sitemaps
+Sitemap: https://keyforge-sigma.vercel.app/sitemap.xml
+Sitemap: https://keyforge-sigma.vercel.app/sitemap-index.xml
