@@ -1,0 +1,16 @@
+/* TEAM */
+Sayan — founder, developer, product & security lead (owner account: sayan9168)
+Sayanox Private Limited — publisher and operator
+
+/* SITE */
+Product: KeyForge Ultra — free, private, in-browser password security workspace
+Production site: https://keyforge-sigma.vercel.app/
+Source: https://github.com/sayan9168/keyforge
+Privacy: https://keyforge-sigma.vercel.app/privacy.html
+Security policy: https://github.com/sayan9168/keyforge/blob/main/SECURITY.md
+
+/* THANKS */
+EFF for the long diceware word list
+zxcvbn-ts contributors for pattern-aware password estimation
+Have I Been Pwned (Troy Hunt) for the public breach API
+All independent security researchers who report responsibly

@@ -32,6 +32,12 @@ export default defineConfig({
     headers: {
       'Referrer-Policy': 'no-referrer',
       'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-XSS-Protection': '1; mode=block',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Resource-Policy': 'same-origin',
+      'Permissions-Policy':
+        'camera=(), microphone=(), geolocation=(), payment=(), usb=(), autoplay=(), clipboard-write=(self), fullscreen=(self)',
       'Cache-Control': 'no-store',
     },
   },

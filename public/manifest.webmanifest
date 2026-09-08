@@ -1,0 +1,20 @@
+{
+  "name": "KeyForge Ultra — Free Secure Password Generator & Strength Checker",
+  "short_name": "KeyForge Ultra",
+  "description": "Free, private, in-browser password generator, passphrase maker, and password strength checker by Sayanox Private Limited. Cryptographically random. No accounts, no tracking.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0e11",
+  "theme_color": "#0b0e11",
+  "categories": ["security", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

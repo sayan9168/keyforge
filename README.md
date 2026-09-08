@@ -2,7 +2,10 @@
 
 **Your keys. Your control.** A privacy-first password security workspace built with semantic HTML, CSS, vanilla JavaScript, and Vite. No accounts, backend, analytics, or persistent password storage.
 
-[Production site](https://keyforge-sigma.vercel.app/) · [Security model](SECURITY.md) · [Third-party credits](public/credits.txt)
+[Production site](https://keyforge-sigma.vercel.app/) · [Security model](SECURITY.md) · [Privacy policy](https://keyforge-sigma.vercel.app/privacy.html) · [Third-party credits](public/credits.txt)
+
+KeyForge Ultra is a product of **Sayanox Private Limited**. Owner and lead developer: **Sayan**
+(GitHub: [sayan9168](https://github.com/sayan9168)).
 
 ## What’s new
 
@@ -98,10 +101,47 @@ src/analysis.worker.js      Off-main-thread analysis
 src/lib/breach.js           Opt-in padded HIBP range protocol
 src/lib/history.js          Bounded, opt-in in-memory history
 src/data/                  EFF vocabulary and provenance
-public/                    Local icons, favicon, license credits
+public/                    Favicon, share card, SEO files, privacy page, security.txt
 tests/                    Unit and production-browser regression tests
 ```
 
+## Search-engine optimization and Google indexing
+
+KeyForge is published by **Sayanox Private Limited** with full crawl/index metadata. The home page
+carries the Google Search Console verification tag:
+
+```html
+<meta name="google-site-verification" content="uyb7Y9wXsprQjKNrrv9c71J_s-F7AOYX7fBlZJFEY5c" />
+```
+
+Ready for Google and other search engines:
+
+- `robots.txt` — allow crawling, points to the sitemaps.
+- `sitemap.xml` / `sitemap-index.xml` — single canonical sitemap with `lastmod` and the
+  `social-card.png` image entry.
+- Structured data (schema.org `WebSite`, `Organization`, `SoftwareApplication`, `Person`) in
+  `index.html` maps KeyForge, Sayanox Private Limited, and owner Sayan (sayan9168).
+- Open Graph / Twitter cards (`social-card.png`, 1200×630) for rich link previews.
+- Descriptive, keyword-aligned `title`, `description`, canonical URL, and index/follow robots
+  directives; `humans.txt` and `.well-known/security.txt` for attribution and vulnerability
+  contact.
+- `privacy.html` — a crawlable, styled privacy policy under the Sayanox brand.
+
+If the production domain ever changes from `keyforge-sigma.vercel.app`, update the canonical URL,
+`og:url`, sitemap URLs, and structured-data URLs before redeploying.
+
+### After deploying
+
+1. Push/merge to the production branch so Vercel deploys the new build.
+2. In [Google Search Console](https://search.google.com/search-console), add the property
+   `https://keyforge-sigma.vercel.app/` and verify it (the meta tag above is already on the page).
+3. Submit `https://keyforge-sigma.vercel.app/sitemap-index.xml` in **Sitemaps**.
+4. Later, use **URL Inspection** to request indexing of the homepage after crawlers have seen it.
+
+The site is fully static with no server-side secrets, so the deployment above is all the
+"backend" work required. To keep the index current, every HTML page also stays in sync with the
+security headers defined in `vercel.json`.
+
 ## License
 
-Application code is [MIT](LICENSE), © 2026 Sayan the researcher. The EFF wordlist, fonts, and bundled dictionaries retain their respective licenses and attribution; see [credits](public/credits.txt) and [wordlist provenance](src/data/README.md).
+Application code is [MIT](LICENSE), © 2026 Sayan (Sayanox Private Limited). The EFF wordlist, fonts, and bundled dictionaries retain their respective licenses and attribution; see [credits](public/credits.txt) and [wordlist provenance](src/data/README.md).
