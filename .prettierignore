@@ -1,0 +1,9 @@
+node_modules/
+dist/
+playwright-report/
+test-results/
+artifacts/
+package-lock.json
+src/data/eff-words.json
+public/credits.txt
+LICENSE

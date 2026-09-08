@@ -1,524 +1,1015 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KeyForge Ultra — Advanced Password Intelligence</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #04040a; --s1: #080810; --s2: #0d0d1a;
-  --border: #161628; --border2: #1f1f38;
-  --a1: #e8ff47; --a2: #ff2d6b; --a3: #2de8ff; --a4: #b56cff;
-  --text: #ddddf5; --muted: #44445a; --muted2: #666680;
-  --font-display: 'Bebas Neue', sans-serif;
-  --font-body: 'Outfit', sans-serif;
-  --font-mono: 'DM Mono', monospace;
-}
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; overflow-x: hidden; cursor: none; }
-#cursor { position: fixed; width: 12px; height: 12px; background: var(--a1); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: transform 0.1s, background 0.2s, width 0.2s, height 0.2s; mix-blend-mode: difference; }
-#cursor-ring { position: fixed; width: 36px; height: 36px; border: 1px solid rgba(232,255,71,0.4); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: all 0.15s ease; }
-#bgCanvas { position: fixed; inset: 0; z-index: 0; opacity: 0.6; }
-body::after { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 1; opacity: 0.3; }
-.app { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; padding: 48px 24px 100px; }
-.hero { text-align: center; margin-bottom: 64px; padding-top: 20px; }
-.hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(232,255,71,0.06); border: 1px solid rgba(232,255,71,0.18); border-radius: 99px; padding: 6px 16px; font-size: 11px; font-family: var(--font-mono); letter-spacing: 3px; color: var(--a1); text-transform: uppercase; margin-bottom: 28px; opacity: 0; animation: slideDown 0.7s 0.1s cubic-bezier(.16,1,.3,1) forwards; }
-.hero-badge::before { content: ''; width: 6px; height: 6px; background: var(--a1); border-radius: 50%; animation: blink 1.5s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-.hero-title { font-family: var(--font-display); font-size: clamp(70px, 14vw, 140px); line-height: 0.9; letter-spacing: 2px; margin-bottom: 20px; opacity: 0; animation: slideDown 0.7s 0.2s cubic-bezier(.16,1,.3,1) forwards; }
-.hero-title .line1 { color: var(--text); }
-.hero-title .line2 { color: transparent; -webkit-text-stroke: 1px var(--a1); display: block; }
-.hero-sub { font-size: 16px; color: var(--muted2); font-weight: 300; letter-spacing: 0.5px; max-width: 420px; margin: 0 auto 32px; line-height: 1.6; opacity: 0; animation: slideDown 0.7s 0.3s cubic-bezier(.16,1,.3,1) forwards; }
-.hero-stats { display: flex; justify-content: center; gap: 40px; opacity: 0; animation: slideDown 0.7s 0.4s cubic-bezier(.16,1,.3,1) forwards; }
-.hero-stat { text-align: center; }
-.hero-stat-val { font-family: var(--font-display); font-size: 36px; color: var(--a1); letter-spacing: 1px; line-height: 1; }
-.hero-stat-label { font-size: 10px; font-family: var(--font-mono); color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
-.tabs-wrap { display: flex; gap: 2px; background: var(--s1); border: 1px solid var(--border); border-radius: 16px; padding: 4px; margin-bottom: 24px; opacity: 0; animation: slideDown 0.7s 0.5s cubic-bezier(.16,1,.3,1) forwards; overflow-x: auto; }
-.tab-btn { flex: 1; min-width: 120px; padding: 12px 16px; background: none; border: none; border-radius: 12px; color: var(--muted2); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.25s; white-space: nowrap; }
-.tab-btn.active { background: var(--a1); color: #000; }
-.tab-btn:not(.active):hover { color: var(--text); background: var(--border); }
-.panel { background: var(--s1); border: 1px solid var(--border); border-radius: 20px; padding: 40px; opacity: 0; animation: slideDown 0.7s 0.6s cubic-bezier(.16,1,.3,1) forwards; display: none; }
-.panel.active { display: block; }
-</style>
-<style>
-.checker-input-wrap { position: relative; margin-bottom: 32px; }
-.field-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.field-label-text { font-size: 10px; font-family: var(--font-mono); letter-spacing: 3px; color: var(--muted2); text-transform: uppercase; }
-.char-count { font-size: 10px; font-family: var(--font-mono); color: var(--muted); }
-.pw-field { width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: 14px; padding: 18px 56px 18px 22px; color: var(--text); font-family: var(--font-mono); font-size: 18px; outline: none; letter-spacing: 3px; transition: border-color 0.3s, box-shadow 0.3s; }
-.pw-field:focus { border-color: var(--a1); box-shadow: 0 0 0 3px rgba(232,255,71,0.08); }
-.pw-field::placeholder { letter-spacing: 1px; color: var(--muted); font-size: 14px; }
-.eye-btn { position: absolute; right: 18px; bottom: 18px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; transition: color 0.2s; line-height: 1; }
-.strength-display { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 20px; margin-bottom: 28px; }
-.meter-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
-.meter-label { font-size: 10px; font-family: var(--font-mono); letter-spacing: 3px; color: var(--muted2); text-transform: uppercase; }
-.meter-score-text { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; transition: color 0.4s; color: var(--muted); }
-.bars-track { display: flex; gap: 5px; height: 5px; margin-bottom: 8px; }
-.bar-seg { flex: 1; border-radius: 99px; background: var(--border2); transition: background 0.5s cubic-bezier(.16,1,.3,1); }
-.entropy-display { text-align: right; }
-.entropy-val { font-family: var(--font-display); font-size: 48px; color: var(--a3); line-height: 1; letter-spacing: 1px; }
-.entropy-unit { font-size: 10px; font-family: var(--font-mono); color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
-.entropy-bar-wrap { margin-bottom: 28px; }
-.entropy-bar-label { display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; }
-.entropy-track { height: 3px; background: var(--border2); border-radius: 99px; overflow: hidden; }
-.entropy-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--a2), var(--a3), var(--a1)); transition: width 0.6s cubic-bezier(.16,1,.3,1); width: 0%; }
-.crit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px; }
-.crit-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; transition: border-color 0.3s, background 0.3s; }
-.crit-card.met { border-color: rgba(232,255,71,0.3); background: rgba(232,255,71,0.04); }
-.crit-card.warn { border-color: rgba(255,45,107,0.3); background: rgba(255,45,107,0.04); }
-.crit-top { display: flex; justify-content: space-between; align-items: center; }
-.crit-icon-wrap { width: 28px; height: 28px; border-radius: 8px; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 14px; }
-.crit-card.met .crit-icon-wrap { background: rgba(232,255,71,0.15); }
-.crit-card.warn .crit-icon-wrap { background: rgba(255,45,107,0.15); }
-.crit-check { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 9px; color: transparent; transition: all 0.3s; }
-.crit-card.met .crit-check { background: var(--a1); border-color: var(--a1); color: #000; }
-.crit-card.warn .crit-check { background: var(--a2); border-color: var(--a2); color: #fff; }
-.crit-name { font-size: 12px; font-weight: 600; color: var(--muted2); transition: color 0.3s; }
-.crit-card.met .crit-name { color: var(--text); }
-.info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
-.info-card { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
-.info-card-label { font-size: 9px; font-family: var(--font-mono); letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
-.info-card-val { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--a1); transition: color 0.3s; word-break: break-word; }
-.info-card-val.danger { color: var(--a2); }
-.info-card-val.safe { color: var(--a1); }
-.info-card-val.neutral { color: var(--a3); }
-.pattern-section { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 28px; }
-.pattern-title { font-size: 10px; font-family: var(--font-mono); letter-spacing: 3px; color: var(--muted2); text-transform: uppercase; margin-bottom: 14px; }
-.pattern-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.pattern-tag { padding: 5px 12px; border-radius: 99px; font-size: 12px; font-family: var(--font-mono); font-weight: 500; border: 1px solid; }
-.pattern-tag.bad { background: rgba(255,45,107,0.1); border-color: rgba(255,45,107,0.3); color: var(--a2); }
-.pattern-tag.ok { background: rgba(45,232,255,0.08); border-color: rgba(45,232,255,0.2); color: var(--a3); }
-.pattern-tag.good { background: rgba(232,255,71,0.08); border-color: rgba(232,255,71,0.2); color: var(--a1); }
-.pattern-tag.info { background: rgba(181,108,255,0.08); border-color: rgba(181,108,255,0.2); color: var(--a4); }
-.similar-section { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
-.similar-title { font-size: 10px; font-family: var(--font-mono); letter-spacing: 3px; color: var(--muted2); text-transform: uppercase; margin-bottom: 14px; }
-.similar-list { display: flex; flex-direction: column; gap: 8px; }
-.similar-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--s1); border: 1px solid var(--border); border-radius: 8px; }
-.similar-pw { font-family: var(--font-mono); font-size: 13px; color: var(--muted2); letter-spacing: 2px; }
-.similar-strength { font-size: 11px; font-family: var(--font-mono); padding: 3px 10px; border-radius: 99px; font-weight: 500; }
-.sim-strong { background: rgba(232,255,71,0.08); color: var(--a1); }
-.gen-mode-pills { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
-.mode-pill { padding: 8px 18px; border-radius: 99px; border: 1px solid var(--border2); background: none; color: var(--muted2); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.mode-pill.active { background: rgba(232,255,71,0.1); border-color: rgba(232,255,71,0.4); color: var(--a1); }
-.gen-output-card { background: var(--bg); border: 1px solid var(--border2); border-radius: 16px; padding: 24px; margin-bottom: 24px; position: relative; overflow: hidden; cursor: pointer; transition: border-color 0.3s; min-height: 90px; display: flex; align-items: center; }
-.gen-output-card:hover { border-color: var(--a1); }
-.gen-pw-text { font-family: var(--font-mono); font-size: 20px; color: var(--a1); word-break: break-all; line-height: 1.5; letter-spacing: 2px; flex: 1; padding-right: 48px; }
-.gen-pw-text.passphrase { letter-spacing: 0px; font-size: 17px; }
-.gen-pw-text.placeholder { color: var(--muted); font-size: 14px; letter-spacing: 1px; font-style: italic; }
-.gen-copy-btn { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(232,255,71,0.08); border: 1px solid rgba(232,255,71,0.2); border-radius: 8px; padding: 8px 10px; color: var(--a1); font-size: 16px; cursor: pointer; transition: all 0.2s; line-height: 1; }
-.gen-strength-mini { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding: 12px 16px; background: var(--bg); border-radius: 10px; border: 1px solid var(--border); }
-.gen-str-bars { display: flex; gap: 4px; }
-.gen-str-bar { width: 24px; height: 4px; border-radius: 99px; background: var(--border2); transition: background 0.4s; }
-.gen-str-label { font-size: 12px; font-family: var(--font-mono); color: var(--muted2); flex: 1; }
-.gen-entropy-mini { font-size: 12px; font-family: var(--font-mono); color: var(--a3); }
-.opt-section { margin-bottom: 24px; }
-.opt-section-title { font-size: 10px; font-family: var(--font-mono); letter-spacing: 3px; color: var(--muted2); text-transform: uppercase; margin-bottom: 14px; }
-.toggles-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.toggle-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s; user-select: none; }
-.toggle-card.on { border-color: rgba(232,255,71,0.25); background: rgba(232,255,71,0.03); }
-.toggle-card-left { display: flex; flex-direction: column; gap: 3px; }
-.toggle-name { font-size: 13px; font-weight: 600; color: var(--text); }
-.toggle-sample { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 1px; }
-.pill-switch { width: 40px; height: 22px; background: var(--border2); border-radius: 99px; position: relative; transition: background 0.25s; flex-shrink: 0; }
-.toggle-card.on .pill-switch { background: var(--a1); }
-.pill-switch::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.25s cubic-bezier(.16,1,.3,1); }
-.toggle-card.on .pill-switch::after { transform: translateX(18px); }
-.slider-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
-.slider-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
-.slider-name { font-size: 13px; font-weight: 600; color: var(--text); }
-.slider-val-display { font-family: var(--font-display); font-size: 32px; color: var(--a1); line-height: 1; }
-input[type="range"] { -webkit-appearance: none; width: 100%; height: 3px; background: var(--border2); border-radius: 99px; outline: none; cursor: pointer; }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: var(--a1); border-radius: 50%; cursor: pointer; box-shadow: 0 0 16px rgba(232,255,71,0.5); }
-.gen-btn { width: 100%; padding: 18px; background: var(--a1); color: #000; border: none; border-radius: 14px; font-family: var(--font-body); font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: 1px; transition: all 0.25s; }
-.gen-btn:hover { background: #f0ff60; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(232,255,71,0.3); }
-.history-section { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
-.history-title { font-size: 10px; font-family: var(--font-mono); letter-spacing: 3px; color: var(--muted2); text-transform: uppercase; margin-bottom: 14px; }
-.history-list { display: flex; flex-direction: column; gap: 8px; }
-.history-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; gap: 12px; }
-.history-pw { font-family: var(--font-mono); font-size: 13px; color: var(--a3); letter-spacing: 1px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.history-actions { display: flex; gap: 6px; flex-shrink: 0; }
-.hist-btn { background: none; border: 1px solid var(--border2); border-radius: 6px; color: var(--muted2); padding: 4px 8px; font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: var(--font-mono); }
-.analyzer-desc { font-size: 14px; color: var(--muted2); margin-bottom: 24px; line-height: 1.6; }
-.compare-inputs { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
-.compare-row { display: flex; gap: 12px; align-items: center; }
-.compare-row input { flex: 1; background: var(--bg); border: 1px solid var(--border2); border-radius: 10px; padding: 14px 18px; color: var(--text); font-family: var(--font-mono); font-size: 14px; outline: none; letter-spacing: 2px; transition: border-color 0.2s; }
-.compare-row input:focus { border-color: var(--a1); }
-.compare-mini-label { font-size: 10px; font-family: var(--font-mono); color: var(--muted); letter-spacing: 2px; white-space: nowrap; width: 28px; text-align: center; }
-.compare-result { display: none; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
-.compare-result.show { display: block; }
-.compare-bars { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
-.compare-bar-row { display: flex; flex-direction: column; gap: 6px; }
-.compare-bar-label { display: flex; justify-content: space-between; font-size: 12px; font-family: var(--font-mono); color: var(--muted2); }
-.cmp-bar-track { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
-.cmp-bar-fill { height: 100%; border-radius: 99px; transition: width 0.8s cubic-bezier(.16,1,.3,1); }
-.winner-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(232,255,71,0.08); border: 1px solid rgba(232,255,71,0.25); border-radius: 10px; padding: 12px 16px; font-size: 13px; font-family: var(--font-mono); color: var(--a1); }
-.tips-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-.tip-card { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; transition: border-color 0.3s, transform 0.3s; }
-.tip-card:hover { border-color: var(--border2); transform: translateY(-2px); }
-.tip-emoji { font-size: 28px; margin-bottom: 12px; }
-.tip-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-.tip-body { font-size: 13px; color: var(--muted2); line-height: 1.6; }
-.toast { position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%) translateY(24px); background: var(--a1); color: #000; font-family: var(--font-mono); font-size: 13px; font-weight: 500; padding: 12px 28px; border-radius: 99px; opacity: 0; pointer-events: none; z-index: 9997; transition: all 0.4s cubic-bezier(.16,1,.3,1); letter-spacing: 1px; white-space: nowrap; }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-@keyframes slideDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-.gen-output-card.generating { animation: pop 0.3s cubic-bezier(.16,1,.3,1) forwards; }
-@media(max-width:600px) { .panel { padding: 24px 20px; } .crit-grid { grid-template-columns: repeat(2,1fr); } .info-row { grid-template-columns: 1fr; } .toggles-grid { grid-template-columns: 1fr; } .tips-grid { grid-template-columns: 1fr; } .strength-display { grid-template-columns: 1fr; } .entropy-display { text-align: left; } .hero-stats { gap: 24px; } }
-                   </style>
-</head>
-<body>
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
-<canvas id="bgCanvas"></canvas>
-<div class="toast" id="toast"></div>
-<div class="app">
-  <header class="hero">
-    <div class="hero-badge">v2.0 Ultra Edition</div>
-    <div class="hero-title">
-      <span class="line1">KEY</span>
-      <span class="line2">FORGE</span>
-    </div>
-    <p class="hero-sub">Advanced password intelligence. Entropy analysis, breach patterns, smart generation — all in one place.</p>
-    <div class="hero-stats">
-      <div class="hero-stat"><div class="hero-stat-val" id="stat-checked">0</div><div class="hero-stat-label">Checked</div></div>
-      <div class="hero-stat"><div class="hero-stat-val" id="stat-generated">0</div><div class="hero-stat-label">Generated</div></div>
-      <div class="hero-stat"><div class="hero-stat-val" id="stat-copied">0</div><div class="hero-stat-label">Copied</div></div>
-    </div>
-  </header>
-  <div class="tabs-wrap">
-    <button class="tab-btn active" onclick="switchTab('checker',this)">🔍 Strength Check</button>
-    <button class="tab-btn" onclick="switchTab('generator',this)">⚡ Generator</button>
-    <button class="tab-btn" onclick="switchTab('compare',this)">⚖️ Compare</button>
-    <button class="tab-btn" onclick="switchTab('tips',this)">💡 Tips</button>
-  </div>
-  <div class="panel active" id="panel-checker">
-    <div class="checker-input-wrap">
-      <div class="field-label">
-        <span class="field-label-text">Enter Password</span>
-        <span class="char-count" id="charCount">0 chars</span>
-      </div>
-      <input type="password" class="pw-field" id="mainPwInput" placeholder="Type or paste your password…" oninput="analyzePassword(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
-      <button class="eye-btn" id="eyeBtn" onclick="toggleEye()">👁</button>
-    </div>
-    <div class="strength-display">
-      <div class="strength-meter">
-        <div class="meter-header">
-          <span class="meter-label">Strength</span>
-          <span class="meter-score-text" id="strengthText">—</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0e11" />
+    <meta
+      name="description"
+      content="Forge stronger passwords, generate memorable passphrases, and understand your security. A private, client-side password workspace with an optional breach check."
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>KeyForge Ultra — Your keys. Your control.</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <script type="module" src="./src/main.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Skip to password tools</a>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="KeyForge home">
+          <span class="brand-symbol" data-icon="key" aria-hidden="true"></span>
+          <span>KEYFORGE<span class="brand-dot">.</span></span>
+          <span class="version-tag">ULTRA / 03</span>
+        </a>
+        <div class="topbar-actions">
+          <span class="local-badge" id="connectionStatus"
+            ><span class="status-dot"></span>LOCAL ENGINE</span
+          >
+          <button
+            type="button"
+            class="button button-ghost button-small"
+            id="clearSession"
+            aria-label="Clear session"
+          >
+            <span data-icon="trash" aria-hidden="true"></span><span>Clear session</span>
+          </button>
         </div>
-        <div class="bars-track">
-          <div class="bar-seg" id="bs1"></div><div class="bar-seg" id="bs2"></div><div class="bar-seg" id="bs3"></div><div class="bar-seg" id="bs4"></div>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="heroTitle">
+          <div class="hero-copy">
+            <p class="eyebrow">
+              <span class="tiny-cross" aria-hidden="true">+</span> YOUR KEYS. YOUR CONTROL.
+            </p>
+            <h1 id="heroTitle">STRONGER KEYS.<br /><span>FEWER WORRIES.</span></h1>
+            <p class="hero-description">
+              A little randomness. A lot more peace of mind.<br class="desktop-break" />
+              Your private workspace for better password security.
+            </p>
+            <div class="hero-assurances">
+              <span><span data-icon="shield" aria-hidden="true"></span>Private by default</span
+              ><span
+                ><span data-icon="spark" aria-hidden="true"></span>Cryptographically random</span
+              >
+            </div>
+          </div>
+          <div class="forge-art" aria-hidden="true">
+            <div class="orbit orbit-outer"></div>
+            <div class="orbit orbit-inner"></div>
+            <span class="orbit-point point-one"></span><span class="orbit-point point-two"></span>
+            <div class="forge-key" data-icon="key"></div>
+            <span class="art-coordinate coordinate-top">RNG / SECURE</span>
+            <span class="art-coordinate coordinate-bottom">BUILT TO BE UNPREDICTABLE</span>
+          </div>
+        </section>
+
+        <noscript
+          ><p class="notice notice-warning">
+            KeyForge needs JavaScript for local password generation and analysis. Enable it in a
+            browser you trust.
+          </p></noscript
+        >
+        <p id="capabilityWarning" class="notice notice-warning" role="alert" hidden></p>
+
+        <section
+          class="workspace"
+          id="workspace"
+          aria-label="Password security workspace"
+          tabindex="-1"
+        >
+          <div class="workspace-tabs" role="tablist" aria-label="Password tools">
+            <button
+              type="button"
+              id="tab-checker"
+              class="workspace-tab"
+              role="tab"
+              aria-selected="true"
+              aria-controls="panel-checker"
+              tabindex="0"
+              data-tab="checker"
+            >
+              <span class="tab-number">01</span
+              ><span data-icon="scan" aria-hidden="true"></span>Strength check
+            </button>
+            <button
+              type="button"
+              id="tab-generator"
+              class="workspace-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-generator"
+              tabindex="-1"
+              data-tab="generator"
+            >
+              <span class="tab-number">02</span
+              ><span data-icon="spark" aria-hidden="true"></span>Generator
+            </button>
+            <button
+              type="button"
+              id="tab-compare"
+              class="workspace-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-compare"
+              tabindex="-1"
+              data-tab="compare"
+            >
+              <span class="tab-number">03</span
+              ><span data-icon="compare" aria-hidden="true"></span>Compare
+            </button>
+            <button
+              type="button"
+              id="tab-guide"
+              class="workspace-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-guide"
+              tabindex="-1"
+              data-tab="guide"
+            >
+              <span class="tab-number">04</span
+              ><span data-icon="book" aria-hidden="true"></span>Security guide
+            </button>
+          </div>
+
+          <div class="workspace-grid">
+            <div class="panels">
+              <section
+                class="tool-panel"
+                id="panel-checker"
+                role="tabpanel"
+                aria-labelledby="tab-checker"
+                tabindex="0"
+              >
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">KNOW YOUR WEAK SPOTS</p>
+                    <h2>More than a character count.</h2>
+                    <p>See the patterns an attacker might try first.</p>
+                  </div>
+                  <span class="panel-icon" data-icon="scan" aria-hidden="true"></span>
+                </div>
+                <div class="field-heading">
+                  <label for="mainPassword">Password to analyze</label
+                  ><span class="mono-caption" id="characterCount">0 / 128</span>
+                </div>
+                <div class="password-field">
+                  <span class="field-lock" data-icon="lock" aria-hidden="true"></span>
+                  <input
+                    id="mainPassword"
+                    type="password"
+                    placeholder="Type or paste a password"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    data-lpignore="true"
+                    data-1p-ignore
+                    aria-describedby="checkerHint checkerError"
+                  />
+                  <button
+                    type="button"
+                    class="icon-button"
+                    data-reveal="mainPassword"
+                    aria-label="Show password to analyze"
+                    aria-pressed="false"
+                  >
+                    <span data-icon="eye" aria-hidden="true"></span>
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-button"
+                    id="clearChecker"
+                    aria-label="Clear password to analyze"
+                  >
+                    <span data-icon="x" aria-hidden="true"></span>
+                  </button>
+                </div>
+                <p class="field-hint" id="checkerHint">
+                  Analyzed in this tab. Don’t enter a real password on a page you don’t trust.
+                </p>
+                <p class="field-error" id="checkerError" role="alert" hidden></p>
+                <div class="example-row">
+                  <span>Just exploring?</span
+                  ><button type="button" class="text-button" data-example="password123">
+                    Try a common password<span data-icon="arrow" aria-hidden="true"></span>
+                  </button>
+                </div>
+
+                <div
+                  class="analysis-result"
+                  id="checkerResults"
+                  aria-busy="false"
+                  data-score="empty"
+                >
+                  <div class="strength-heading">
+                    <div>
+                      <p class="eyebrow">ESTIMATED STRENGTH</p>
+                      <h3 id="strengthLabel">Waiting for a password</h3>
+                    </div>
+                    <div class="score-number">
+                      <span id="strengthScore">—</span><small>/ 4</small>
+                    </div>
+                  </div>
+                  <div
+                    class="strength-bars"
+                    id="strengthMeter"
+                    role="meter"
+                    aria-label="Estimated password strength"
+                    aria-valuemin="0"
+                    aria-valuemax="4"
+                    aria-valuenow="0"
+                    aria-valuetext="No password yet"
+                  >
+                    <span></span><span></span><span></span><span></span><span></span>
+                  </div>
+                  <p id="analysisStatus" class="field-hint" role="status" aria-live="polite">
+                    A local, pattern-aware estimate. Not a security guarantee.
+                  </p>
+                  <div class="metrics-grid">
+                    <div class="metric">
+                      <span class="metric-label">ESTIMATED GUESSES</span
+                      ><strong id="guessCount">—</strong>
+                    </div>
+                    <div class="metric">
+                      <span class="metric-label">ILLUSTRATIVE GUESS TIME</span
+                      ><strong id="crackTime">—</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <section class="observations" aria-labelledby="observationsTitle">
+                  <div class="section-heading">
+                    <h3 id="observationsTitle">Character profile</h3>
+                    <span class="mono-caption">NOT A CHECKLIST</span>
+                  </div>
+                  <div class="profile-grid">
+                    <div><strong id="profileLength">—</strong><span>Code points</span></div>
+                    <div><strong id="profileUnique">—</strong><span>Unique</span></div>
+                    <div><strong id="profileUpper">—</strong><span>Uppercase</span></div>
+                    <div><strong id="profileLower">—</strong><span>Lowercase</span></div>
+                    <div><strong id="profileNumbers">—</strong><span>Numbers</span></div>
+                    <div><strong id="profileSymbols">—</strong><span>Symbols</span></div>
+                  </div>
+                </section>
+
+                <section class="feedback-card" aria-labelledby="feedbackTitle">
+                  <div class="section-heading">
+                    <h3 id="feedbackTitle">
+                      <span data-icon="insight" aria-hidden="true"></span>What the model sees
+                    </h3>
+                  </div>
+                  <div class="pattern-tags" id="patternTags"></div>
+                  <p id="feedbackSummary">
+                    Common words, repeated characters, dates, and keyboard patterns can make a long
+                    password surprisingly predictable.
+                  </p>
+                  <ul id="feedbackSuggestions"></ul>
+                  <button type="button" class="text-button" data-open-tab="generator">
+                    Forge a fresh password<span data-icon="arrow" aria-hidden="true"></span>
+                  </button>
+                </section>
+
+                <section class="breach-card" aria-labelledby="breachTitle">
+                  <div class="section-heading">
+                    <h3 id="breachTitle">
+                      <span data-icon="radar" aria-hidden="true"></span>Has it appeared in a breach?
+                    </h3>
+                    <span class="small-tag">OPTIONAL</span>
+                  </div>
+                  <p>
+                    This lookup contacts
+                    <a
+                      href="https://haveibeenpwned.com/Passwords"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Have I Been Pwned</a
+                    >. Only the first 5 characters of a SHA-1 hash are sent—not your password or
+                    full hash. The service still sees your IP address and that prefix. Padded
+                    responses are requested.
+                  </p>
+                  <label class="check-line" for="breachConsent"
+                    ><input id="breachConsent" type="checkbox" /><span
+                      >I allow this external lookup.</span
+                    ></label
+                  >
+                  <div class="breach-actions">
+                    <button type="button" class="button button-secondary" id="checkBreach" disabled>
+                      <span data-icon="radar" aria-hidden="true"></span>Check breach dataset</button
+                    ><button type="button" class="text-button" id="cancelBreach" hidden>
+                      Cancel lookup
+                    </button>
+                  </div>
+                  <p
+                    class="breach-status"
+                    id="breachStatus"
+                    role="status"
+                    aria-live="polite"
+                    data-state="idle"
+                  >
+                    Not checked. No external request has been made.
+                  </p>
+                </section>
+              </section>
+
+              <section
+                class="tool-panel"
+                id="panel-generator"
+                role="tabpanel"
+                aria-labelledby="tab-generator"
+                tabindex="0"
+                hidden
+              >
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">LEAVE PREDICTABLE BEHIND</p>
+                    <h2>Make your next password.</h2>
+                    <p>Secure randomness. Your rules. Zero server-side generation.</p>
+                  </div>
+                  <span class="panel-icon" data-icon="spark" aria-hidden="true"></span>
+                </div>
+                <div id="generatorSettings">
+                  <fieldset class="mode-picker">
+                    <legend class="sr-only">Generation mode</legend>
+                    <label
+                      ><input type="radio" name="generationMode" value="random" checked /><span
+                        >Random</span
+                      ></label
+                    ><label
+                      ><input type="radio" name="generationMode" value="passphrase" /><span
+                        >Passphrase</span
+                      ></label
+                    ><label
+                      ><input type="radio" name="generationMode" value="pin" /><span
+                        >PIN</span
+                      ></label
+                    ><label
+                      ><input type="radio" name="generationMode" value="pattern" /><span
+                        >Pattern</span
+                      ></label
+                    >
+                  </fieldset>
+                  <div class="preset-row">
+                    <span class="mono-caption">QUICK SETUP</span
+                    ><button type="button" class="preset-button" data-preset="everyday">
+                      Everyday · 20</button
+                    ><button type="button" class="preset-button" data-preset="maximum">
+                      Extra long · 32</button
+                    ><button type="button" class="preset-button" data-preset="memorable">
+                      Memorable · 6 words
+                    </button>
+                  </div>
+                  <div class="generator-options" id="options-random">
+                    <div class="length-heading">
+                      <label for="passwordLength">Password length</label>
+                      <div class="number-input-wrap">
+                        <input
+                          id="passwordLength"
+                          type="number"
+                          min="4"
+                          max="128"
+                          value="20"
+                          inputmode="numeric"
+                        /><span>characters</span>
+                      </div>
+                    </div>
+                    <input
+                      id="passwordLengthRange"
+                      class="range-input"
+                      type="range"
+                      min="4"
+                      max="128"
+                      value="20"
+                      aria-label="Password length slider"
+                    />
+                    <div class="range-labels"><span>4</span><span>128</span></div>
+                    <fieldset class="character-settings">
+                      <legend>Include at least one from each selected set</legend>
+                      <div class="toggle-grid">
+                        <label class="toggle-card"
+                          ><span><strong>Uppercase</strong><small>A–Z</small></span
+                          ><input
+                            id="includeUpper"
+                            type="checkbox"
+                            class="switch-input"
+                            checked
+                            aria-label="Include uppercase" /></label
+                        ><label class="toggle-card"
+                          ><span><strong>Lowercase</strong><small>a–z</small></span
+                          ><input
+                            id="includeLower"
+                            type="checkbox"
+                            class="switch-input"
+                            checked
+                            aria-label="Include lowercase" /></label
+                        ><label class="toggle-card"
+                          ><span><strong>Numbers</strong><small>0–9</small></span
+                          ><input
+                            id="includeNumbers"
+                            type="checkbox"
+                            class="switch-input"
+                            checked
+                            aria-label="Include numbers" /></label
+                        ><label class="toggle-card"
+                          ><span><strong>Symbols</strong><small>! @ # $ %</small></span
+                          ><input
+                            id="includeSymbols"
+                            type="checkbox"
+                            class="switch-input"
+                            checked
+                            aria-label="Include symbols" /></label
+                        ><label class="toggle-card"
+                          ><span><strong>Brackets</strong><small>[ ] { } ( )</small></span
+                          ><input
+                            id="includeBrackets"
+                            type="checkbox"
+                            class="switch-input"
+                            aria-label="Include brackets" /></label
+                        ><label class="toggle-card"
+                          ><span><strong>Exclude lookalikes</strong><small>0 O 1 l I</small></span
+                          ><input
+                            id="excludeSimilar"
+                            type="checkbox"
+                            class="switch-input"
+                            aria-label="Exclude lookalikes"
+                        /></label>
+                      </div>
+                    </fieldset>
+                    <label class="input-label" for="excludeCharacters"
+                      >Characters to exclude <span>(optional)</span></label
+                    ><input
+                      class="text-input mono-input"
+                      id="excludeCharacters"
+                      type="text"
+                      maxlength="96"
+                      placeholder="e.g. &quot; ' ` \\"
+                      autocomplete="off"
+                      autocapitalize="off"
+                      spellcheck="false"
+                    />
+                  </div>
+                  <div class="generator-options" id="options-passphrase" hidden>
+                    <div class="length-heading">
+                      <label for="wordCount">Number of words</label>
+                      <div class="number-input-wrap">
+                        <input
+                          id="wordCount"
+                          type="number"
+                          min="3"
+                          max="10"
+                          value="6"
+                          inputmode="numeric"
+                        /><span>words</span>
+                      </div>
+                    </div>
+                    <input
+                      id="wordCountRange"
+                      class="range-input"
+                      type="range"
+                      min="3"
+                      max="10"
+                      value="6"
+                      aria-label="Word count slider"
+                    />
+                    <div class="range-labels"><span>3</span><span>10</span></div>
+                    <div class="notice notice-info">
+                      <span data-icon="book" aria-hidden="true"></span>
+                      <p>
+                        7,776 words from the EFF long wordlist. Six independent words provide about
+                        77.5 bits of generation entropy. We recommend six or more.
+                      </p>
+                    </div>
+                    <label class="input-label" for="wordSeparator">Word separator</label
+                    ><select id="wordSeparator" class="select-input">
+                      <option value=" ">Space</option>
+                      <option value=".">Dot (.)</option>
+                      <option value="_">Underscore (_)</option>
+                    </select>
+                    <div class="inline-options">
+                      <label class="check-line"
+                        ><input id="capitalizeWords" type="checkbox" /><span
+                          >Capitalize each word</span
+                        ></label
+                      ><label class="check-line"
+                        ><input id="appendNumber" type="checkbox" /><span
+                          >Add 3 random digits</span
+                        ></label
+                      >
+                    </div>
+                    <p class="field-hint">
+                      Capitalization adds no randomness. Separators preserve unambiguous word
+                      boundaries.
+                    </p>
+                  </div>
+                  <div class="generator-options" id="options-pin" hidden>
+                    <div class="length-heading">
+                      <label for="pinLength">PIN length</label>
+                      <div class="number-input-wrap">
+                        <input
+                          id="pinLength"
+                          type="number"
+                          min="4"
+                          max="12"
+                          value="6"
+                          inputmode="numeric"
+                        /><span>digits</span>
+                      </div>
+                    </div>
+                    <input
+                      id="pinLengthRange"
+                      class="range-input"
+                      type="range"
+                      min="4"
+                      max="12"
+                      value="6"
+                      aria-label="PIN length slider"
+                    />
+                    <div class="range-labels"><span>4</span><span>12</span></div>
+                    <div class="notice notice-warning">
+                      <span data-icon="info" aria-hidden="true"></span>
+                      <p>
+                        PINs have a small search space. Use them only with devices or services that
+                        enforce attempt limits—not as a replacement for a full password. Leading
+                        zeros are kept.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="generator-options" id="options-pattern" hidden>
+                    <label class="input-label" for="passwordPattern">Your pattern</label
+                    ><input
+                      class="text-input mono-input"
+                      id="passwordPattern"
+                      type="text"
+                      value="Llllddss-Llllddss"
+                      autocomplete="off"
+                      autocapitalize="off"
+                      spellcheck="false"
+                      aria-describedby="patternHint"
+                    />
+                    <div class="pattern-legend">
+                      <span><code>L</code> Uppercase</span><span><code>l</code> Lowercase</span
+                      ><span><code>d</code> Digit</span><span><code>s</code> Symbol</span>
+                    </div>
+                    <p class="field-hint" id="patternHint">
+                      Other characters stay literal. Escape a token with a backslash to keep it
+                      literal, e.g. <code>\L</code>. Literal characters contribute zero bits.
+                      Maximum output: 128 characters.
+                    </p>
+                  </div>
+                  <div class="generate-controls">
+                    <div>
+                      <label class="input-label" for="batchSize">How many?</label
+                      ><select class="select-input" id="batchSize">
+                        <option value="1">1 password</option>
+                        <option value="5">5 passwords</option>
+                        <option value="10">10 passwords</option>
+                        <option value="25">25 passwords</option>
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      class="button button-primary generate-button"
+                      id="generatePassword"
+                    >
+                      <span data-icon="spark" aria-hidden="true"></span
+                      ><span id="generateButtonLabel">Generate password</span
+                      ><span data-icon="arrow" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                </div>
+                <p class="field-error" id="generatorError" role="alert" hidden></p>
+                <div class="generator-output" id="generatorOutput" data-empty="true">
+                  <div class="output-heading">
+                    <span class="eyebrow">YOUR NEW PASSWORD</span
+                    ><span class="small-tag" id="generatedModeLabel">READY TO FORGE</span>
+                  </div>
+                  <code class="secret-text" id="generatedPassword" tabindex="0"
+                    >Ready when you are.</code
+                  >
+                  <div class="output-footer">
+                    <div>
+                      <strong id="generatedEntropy">— bits</strong
+                      ><span class="mono-caption">GENERATION ENTROPY</span>
+                    </div>
+                    <div class="output-actions">
+                      <button
+                        type="button"
+                        class="icon-button"
+                        id="toggleGenerated"
+                        aria-label="Hide generated password"
+                        aria-pressed="true"
+                        disabled
+                      >
+                        <span data-icon="eye" aria-hidden="true"></span></button
+                      ><button type="button" class="button button-copy" id="copyGenerated" disabled>
+                        <span data-icon="copy" aria-hidden="true"></span>Copy
+                      </button>
+                    </div>
+                  </div>
+                  <div class="output-meta">
+                    <span id="generatedStrength">Your next password starts here.</span
+                    ><button type="button" class="text-button" id="analyzeGenerated" disabled>
+                      Analyze<span data-icon="arrow" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                </div>
+                <p id="generationStatus" class="field-hint" role="status" aria-live="polite">
+                  No password has been generated yet.
+                </p>
+                <div id="batchSection" class="batch-section" hidden>
+                  <div class="section-heading">
+                    <h3>Batch results</h3>
+                    <button type="button" class="text-button" id="exportBatch">
+                      <span data-icon="download" aria-hidden="true"></span>Export .txt
+                    </button>
+                  </div>
+                  <p class="field-hint">
+                    Masked by default. These are independent draws; short PINs can repeat.
+                  </p>
+                  <ol class="secret-list" id="batchList"></ol>
+                </div>
+                <section class="history-section" aria-labelledby="historyTitle">
+                  <div class="section-heading">
+                    <h3 id="historyTitle">
+                      <span data-icon="history" aria-hidden="true"></span>Recent passwords
+                    </h3>
+                    <button type="button" class="text-button" id="clearHistory" disabled>
+                      Clear history
+                    </button>
+                  </div>
+                  <label class="check-line"
+                    ><input id="rememberHistory" type="checkbox" /><span
+                      >Keep the last 10 in this tab</span
+                    ></label
+                  >
+                  <p class="field-hint">
+                    Off by default. Memory only. Turning this off or reloading clears the list.
+                  </p>
+                  <p class="empty-state" id="historyEmpty">
+                    Your history is off. A clean slate, by design.
+                  </p>
+                  <ol class="secret-list" id="historyList"></ol>
+                </section>
+              </section>
+
+              <section
+                class="tool-panel"
+                id="panel-compare"
+                role="tabpanel"
+                aria-labelledby="tab-compare"
+                tabindex="0"
+                hidden
+              >
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">PUT THEM SIDE BY SIDE</p>
+                    <h2>Longer isn’t always stronger.</h2>
+                    <p>Compare estimated guess resistance, not just complexity.</p>
+                  </div>
+                  <span class="panel-icon" data-icon="compare" aria-hidden="true"></span>
+                </div>
+                <div class="compare-inputs">
+                  <div>
+                    <label class="input-label" for="compareA"
+                      ><span class="letter-badge">A</span>Password A</label
+                    >
+                    <div class="password-field">
+                      <input
+                        id="compareA"
+                        type="password"
+                        placeholder="First password"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        data-lpignore="true"
+                        data-1p-ignore
+                      /><button
+                        type="button"
+                        class="icon-button"
+                        data-reveal="compareA"
+                        aria-label="Show password A"
+                        aria-pressed="false"
+                      >
+                        <span data-icon="eye" aria-hidden="true"></span>
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="input-label" for="compareB"
+                      ><span class="letter-badge letter-b">B</span>Password B</label
+                    >
+                    <div class="password-field">
+                      <input
+                        id="compareB"
+                        type="password"
+                        placeholder="Second password"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        data-lpignore="true"
+                        data-1p-ignore
+                      /><button
+                        type="button"
+                        class="icon-button"
+                        data-reveal="compareB"
+                        aria-label="Show password B"
+                        aria-pressed="false"
+                      >
+                        <span data-icon="eye" aria-hidden="true"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <p class="field-error" id="compareError" role="alert" hidden></p>
+                <p class="field-hint">
+                  Both inputs stay in this tab. No breach lookups are performed here.
+                </p>
+                <div
+                  class="comparison-summary"
+                  id="comparisonSummary"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span data-icon="compare" aria-hidden="true"></span>
+                  <p id="comparisonVerdict">Enter both passwords to compare.</p>
+                </div>
+                <div class="table-wrap">
+                  <table class="comparison-table">
+                    <caption class="sr-only">
+                      Password comparison. Times use the selected attack model.
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Metric</th>
+                        <th scope="col">Password A</th>
+                        <th scope="col">Password B</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th scope="row">Strength estimate</th>
+                        <td id="compareScoreA">—</td>
+                        <td id="compareScoreB">—</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Estimated guesses</th>
+                        <td id="compareGuessesA">—</td>
+                        <td id="compareGuessesB">—</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Illustrative guess time</th>
+                        <td id="compareTimeA">—</td>
+                        <td id="compareTimeB">—</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Length (code points)</th>
+                        <td id="compareLengthA">—</td>
+                        <td id="compareLengthB">—</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Unique characters</th>
+                        <td id="compareUniqueA">—</td>
+                        <td id="compareUniqueB">—</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="field-hint comparison-note">
+                  A score is not a probability. These estimates miss some languages, personal
+                  information, and attacker knowledge. Neither result proves a password is safe.
+                </p>
+                <button type="button" class="button button-secondary" id="clearComparison">
+                  <span data-icon="trash" aria-hidden="true"></span>Clear both passwords
+                </button>
+              </section>
+
+              <section
+                class="tool-panel"
+                id="panel-guide"
+                role="tabpanel"
+                aria-labelledby="tab-guide"
+                tabindex="0"
+                hidden
+              >
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">SMALL HABITS. STRONGER SECURITY.</p>
+                    <h2>A better set of defaults.</h2>
+                    <p>Good passwords are only one part of staying protected.</p>
+                  </div>
+                  <span class="panel-icon" data-icon="book" aria-hidden="true"></span>
+                </div>
+                <div class="guide-grid">
+                  <article class="guide-card">
+                    <span class="guide-number">01 /</span
+                    ><span data-icon="key" aria-hidden="true"></span>
+                    <h3>One account. One password.</h3>
+                    <p>
+                      Reuse turns one breach into many. Let a reputable password manager generate
+                      and remember a different password for every account.
+                    </p>
+                  </article>
+                  <article class="guide-card">
+                    <span class="guide-number">02 /</span
+                    ><span data-icon="book" aria-hidden="true"></span>
+                    <h3>Memorable, not predictable.</h3>
+                    <p>
+                      Choose independently random words, not a quotation or personal story. Start
+                      with six words from the EFF long list. Never reuse a public example.
+                    </p>
+                  </article>
+                  <article class="guide-card">
+                    <span class="guide-number">03 /</span
+                    ><span data-icon="shield" aria-hidden="true"></span>
+                    <h3>Go beyond a password.</h3>
+                    <p>
+                      Use passkeys or a security key when offered. Otherwise enable an authenticator
+                      app, and keep recovery codes somewhere safe.
+                    </p>
+                  </article>
+                  <article class="guide-card">
+                    <span class="guide-number">04 /</span
+                    ><span data-icon="scan" aria-hidden="true"></span>
+                    <h3>Complexity isn’t randomness.</h3>
+                    <p>
+                      “Password” with a capital, a number, and a symbol is still predictable. Length
+                      helps most when it comes from genuinely random choices.
+                    </p>
+                  </article>
+                  <article class="guide-card">
+                    <span class="guide-number">05 /</span
+                    ><span data-icon="radar" aria-hidden="true"></span>
+                    <h3>No match doesn’t mean safe.</h3>
+                    <p>
+                      Breach datasets are incomplete. If a password has been exposed, replace it
+                      everywhere it was used and review active account sessions.
+                    </p>
+                  </article>
+                  <article class="guide-card">
+                    <span class="guide-number">06 /</span
+                    ><span data-icon="copy" aria-hidden="true"></span>
+                    <h3>Mind what you leave behind.</h3>
+                    <p>
+                      Clipboard managers and exported files may retain secrets. Clear session only
+                      clears this page—not your clipboard, downloads, or browser extensions.
+                    </p>
+                  </article>
+                </div>
+                <details class="explanation" open>
+                  <summary>How does KeyForge estimate strength?</summary>
+                  <p>
+                    The checker uses the local zxcvbn-ts engine with common-password and English
+                    dictionaries. It looks for likely guessing strategies, including repetitions,
+                    keyboard walks, dates, and substitutions. The 0–4 rating and guess counts are
+                    estimates, not guarantees. Other languages and personal context may be modeled
+                    poorly.
+                  </p>
+                  <p>
+                    Human-chosen text has no directly measurable entropy. Only the generator shows
+                    <strong>generation entropy</strong>, calculated from its known, uniformly
+                    sampled output space. Literal characters and deterministic capitalization add
+                    none.
+                  </p>
+                  <p>
+                    Guess times use your selected illustrative attack rate. Actual resistance
+                    depends on password hashing, hardware, rate limits, and what an attacker knows.
+                    Nothing here is labeled “uncrackable” or “quantum-safe.”
+                  </p>
+                </details>
+                <details class="explanation">
+                  <summary>What happens to my passwords?</summary>
+                  <p>
+                    Generation, analysis, comparison, and optional history run in page memory. No
+                    passwords are written to browser storage, sent to analytics, or included in
+                    URLs. Fonts, dictionaries, and application code are hosted with the app.
+                  </p>
+                  <p>
+                    The only external API request is a breach lookup you explicitly allow and click.
+                    It sends a five-character hash prefix to Have I Been Pwned, without cookies,
+                    caching, or a referrer. This reduces disclosure but is not anonymity: the
+                    service sees your IP and the prefix.
+                  </p>
+                  <p>
+                    Revealed passwords are hidden when the tab goes into the background. Clear
+                    session drops page references and resets the interface, but JavaScript cannot
+                    guarantee forensic memory erasure. This is a tool, not a password vault.
+                  </p>
+                </details>
+                <div class="guide-links">
+                  <a href="https://www.eff.org/dice" target="_blank" rel="noopener noreferrer"
+                    >EFF passphrase guide<span data-icon="external" aria-hidden="true"></span></a
+                  ><a
+                    href="https://haveibeenpwned.com/Passwords"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Pwned Passwords<span data-icon="external" aria-hidden="true"></span
+                    ><span class="sr-only"> (external)</span></a
+                  >
+                </div>
+              </section>
+            </div>
+
+            <aside class="workspace-sidebar" aria-label="Privacy and session information">
+              <section class="privacy-card">
+                <div class="sidebar-icon" data-icon="shield" aria-hidden="true"></div>
+                <p class="eyebrow">PRIVATE BY DEFAULT</p>
+                <h2>Your passwords.<br />Not our business.</h2>
+                <p>No account. No analytics.<br />No persistent password storage.</p>
+                <ul class="privacy-list">
+                  <li>
+                    <span data-icon="check" aria-hidden="true"></span>Generated on your device
+                  </li>
+                  <li>
+                    <span data-icon="check" aria-hidden="true"></span>Analyzed in a local worker
+                  </li>
+                  <li>
+                    <span data-icon="check" aria-hidden="true"></span>History is off until you opt
+                    in
+                  </li>
+                </ul>
+                <div class="privacy-footnote">
+                  <span data-icon="info" aria-hidden="true"></span
+                  ><span>Breach checks are optional and contact an external service.</span>
+                </div>
+              </section>
+              <section class="sidebar-card model-card">
+                <label class="eyebrow" for="attackScenario">ATTACK MODEL</label
+                ><select id="attackScenario" class="select-input">
+                  <option value="offline-fast">Offline · fast hash</option>
+                  <option value="offline-slow">Offline · slow hash</option>
+                  <option value="online">Online · unthrottled</option>
+                  <option value="throttled">Online · rate-limited</option>
+                </select>
+                <p class="model-rate" id="attackRate">10 billion guesses / second</p>
+                <p>Used for checker and comparison times. Real-world rates vary considerably.</p>
+                <button type="button" class="text-button" data-open-tab="guide">
+                  Understand the estimates<span data-icon="arrow" aria-hidden="true"></span>
+                </button>
+              </section>
+              <section class="sidebar-card session-card">
+                <p class="eyebrow">THIS SESSION</p>
+                <dl>
+                  <div>
+                    <dt>Analyzed</dt>
+                    <dd id="statAnalyzed">0</dd>
+                  </div>
+                  <div>
+                    <dt>Generated</dt>
+                    <dd id="statGenerated">0</dd>
+                  </div>
+                  <div>
+                    <dt>Copied</dt>
+                    <dd id="statCopied">0</dd>
+                  </div>
+                </dl>
+                <p class="field-hint">Counts reset when you clear or reload.</p>
+              </section>
+              <div class="keyboard-hint">
+                <span data-icon="command" aria-hidden="true"></span>
+                <p>
+                  <kbd>Alt</kbd> + <kbd>G</kbd> to generate<br /><kbd>Esc</kbd> to hide revealed
+                  passwords
+                </p>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </main>
+      <footer class="footer">
+        <p><span class="footer-dot"></span>FORGE SMARTER. STAY SAFER.</p>
+        <div>
+          <span>KeyForge Ultra 3.0</span
+          ><a href="https://github.com/sayan9168/keyforge" target="_blank" rel="noopener noreferrer"
+            >Source<span data-icon="external" aria-hidden="true"></span></a
+          ><a href="./credits.txt" target="_blank" rel="noopener">Credits</a>
         </div>
+      </footer>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <dialog
+      id="exportDialog"
+      class="export-dialog"
+      aria-labelledby="exportTitle"
+      aria-describedby="exportDescription"
+    >
+      <span class="dialog-icon" data-icon="download" aria-hidden="true"></span>
+      <p class="eyebrow">A QUICK SECURITY NOTE</p>
+      <h2 id="exportTitle">This file contains plaintext passwords.</h2>
+      <p id="exportDescription">
+        Anyone who can open the downloaded file can read them. Prefer a trusted password manager.
+        KeyForge cannot delete files after you download them.
+      </p>
+      <div class="dialog-actions">
+        <button type="button" class="button button-secondary" id="cancelExport" autofocus>
+          Cancel</button
+        ><button type="button" class="button button-primary" id="confirmExport">
+          Download plaintext
+        </button>
       </div>
-      <div class="entropy-display">
-        <div class="entropy-val" id="entropyVal">0</div>
-        <div class="entropy-unit">bits entropy</div>
-      </div>
-    </div>
-    <div class="entropy-bar-wrap">
-      <div class="entropy-bar-label"><span>0 bits</span><span>Very Weak</span><span>Good</span><span>128 bits</span></div>
-      <div class="entropy-track"><div class="entropy-fill" id="entropyFill"></div></div>
-    </div>
-    <div class="crit-grid">
-      <div class="crit-card" id="cr-len"><div class="crit-top"><div class="crit-icon-wrap">📏</div><div class="crit-check">✓</div></div><div class="crit-name">8+ Length</div></div>
-      <div class="crit-card" id="cr-upper"><div class="crit-top"><div class="crit-icon-wrap">🔠</div><div class="crit-check">✓</div></div><div class="crit-name">Uppercase</div></div>
-      <div class="crit-card" id="cr-lower"><div class="crit-top"><div class="crit-icon-wrap">🔡</div><div class="crit-check">✓</div></div><div class="crit-name">Lowercase</div></div>
-      <div class="crit-card" id="cr-num"><div class="crit-top"><div class="crit-icon-wrap">🔢</div><div class="crit-check">✓</div></div><div class="crit-name">Numbers</div></div>
-      <div class="crit-card" id="cr-sym"><div class="crit-top"><div class="crit-icon-wrap">💥</div><div class="crit-check">✓</div></div><div class="crit-name">Symbols</div></div>
-      <div class="crit-card" id="cr-long"><div class="crit-top"><div class="crit-icon-wrap">🏆</div><div class="crit-check">✓</div></div><div class="crit-name">16+ Length</div></div>
-    </div>
-    <div class="info-row">
-      <div class="info-card"><div class="info-card-label">Est. Crack Time</div><div class="info-card-val neutral" id="crackTimeVal">—</div></div>
-      <div class="info-card"><div class="info-card-label">Charset Size</div><div class="info-card-val neutral" id="charsetVal">—</div></div>
-    </div>
-    <div class="pattern-section">
-      <div class="pattern-title">Pattern Analysis</div>
-      <div class="pattern-tags" id="patternTags"><span class="pattern-tag info">Type a password to analyze…</span></div>
-    </div>
-    <div class="similar-section">
-      <div class="similar-title">Stronger Alternatives (auto-generated)</div>
-      <div class="similar-list" id="suggestedList"><div style="font-size:13px;color:var(--muted);font-family:var(--font-mono);">Suggestions appear after analysis…</div></div>
-    </div>
-  </div>
-  <div class="panel" id="panel-generator">
-    <div class="gen-mode-pills">
-      <button class="mode-pill active" onclick="setGenMode('random',this)">🎲 Random</button>
-      <button class="mode-pill" onclick="setGenMode('passphrase',this)">📖 Passphrase</button>
-      <button class="mode-pill" onclick="setGenMode('pin',this)">🔢 PIN</button>
-      <button class="mode-pill" onclick="setGenMode('pattern',this)">🎯 Pattern</button>
-    </div>
-    <div class="gen-output-card" id="genOutputCard" onclick="copyGen()">
-      <div class="gen-pw-text placeholder" id="genPwText">Press Generate →</div>
-      <button class="gen-copy-btn" onclick="copyGen(event)">📋</button>
-    </div>
-    <div class="gen-strength-mini">
-      <div class="gen-str-bars">
-        <div class="gen-str-bar" id="gsb1"></div><div class="gen-str-bar" id="gsb2"></div><div class="gen-str-bar" id="gsb3"></div><div class="gen-str-bar" id="gsb4"></div>
-      </div>
-      <div class="gen-str-label" id="genStrLabel">—</div>
-      <div class="gen-entropy-mini" id="genEntropyMini">0 bits</div>
-    </div>
-    <div id="random-opts">
-      <div class="opt-section">
-        <div class="slider-card">
-          <div class="slider-head"><span class="slider-name">Password Length</span><span class="slider-val-display" id="lenDisplay">20</span></div>
-          <input type="range" min="4" max="128" value="20" id="lenRange" oninput="document.getElementById('lenDisplay').textContent=this.value; liveGenPreview();">
-        </div>
-      </div>
-      <div class="opt-section">
-        <div class="opt-section-title">Character Sets</div>
-        <div class="toggles-grid">
-          <div class="toggle-card on" id="tog-upper" onclick="toggleOpt(this,'upper')"><div class="toggle-card-left"><div class="toggle-name">Uppercase</div><div class="toggle-sample">A B C D E F</div></div><div class="pill-switch"></div></div>
-          <div class="toggle-card on" id="tog-lower" onclick="toggleOpt(this,'lower')"><div class="toggle-card-left"><div class="toggle-name">Lowercase</div><div class="toggle-sample">a b c d e f</div></div><div class="pill-switch"></div></div>
-          <div class="toggle-card on" id="tog-num" onclick="toggleOpt(this,'num')"><div class="toggle-card-left"><div class="toggle-name">Numbers</div><div class="toggle-sample">0 1 2 3 4 5</div></div><div class="pill-switch"></div></div>
-          <div class="toggle-card on" id="tog-sym" onclick="toggleOpt(this,'sym')"><div class="toggle-card-left"><div class="toggle-name">Symbols</div><div class="toggle-sample">! @ # $ % ^</div></div><div class="pill-switch"></div></div>
-          <div class="toggle-card" id="tog-ambig" onclick="toggleOpt(this,'ambig')"><div class="toggle-card-left"><div class="toggle-name">Exclude Similar</div><div class="toggle-sample">0 O l 1 I</div></div><div class="pill-switch"></div></div>
-          <div class="toggle-card" id="tog-brackets" onclick="toggleOpt(this,'brackets')"><div class="toggle-card-left"><div class="toggle-name">Brackets</div><div class="toggle-sample">[ ] { } ( )</div></div><div class="pill-switch"></div></div>
-        </div>
-      </div>
-    </div>
-    <div id="passphrase-opts" style="display:none">
-      <div class="slider-card" style="margin-bottom:10px">
-        <div class="slider-head"><span class="slider-name">Number of Words</span><span class="slider-val-display" id="wordsDisplay">4</span></div>
-        <input type="range" min="3" max="8" value="4" id="wordsRange" oninput="document.getElementById('wordsDisplay').textContent=this.value; liveGenPreview();">
-      </div>
-    </div>
-    <div id="pin-opts" style="display:none">
-      <div class="slider-card" style="margin-bottom:10px">
-        <div class="slider-head"><span class="slider-name">PIN Length</span><span class="slider-val-display" id="pinDisplay">6</span></div>
-        <input type="range" min="4" max="12" value="6" id="pinRange" oninput="document.getElementById('pinDisplay').textContent=this.value; liveGenPreview();">
-      </div>
-    </div>
-    <div id="pattern-opts" style="display:none">
-      <div class="info-card" style="margin-bottom:16px">
-        <div class="info-card-label">Pattern Legend</div>
-        <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted2);line-height:1.8;"><b style="color:var(--a1)">L</b> = Uppercase &nbsp; <b style="color:var(--a3)">l</b> = Lowercase &nbsp; <b style="color:var(--a4)">d</b> = Digit &nbsp; <b style="color:var(--a2)">s</b> = Symbol</div>
-      </div>
-      <input type="text" id="patternInput" class="pw-field" style="margin-bottom:16px;font-size:15px;letter-spacing:4px" placeholder="LLllddss" value="LLllddss" oninput="liveGenPreview()">
-    </div>
-    <button class="gen-btn" onclick="generatePw()">⚡ Generate Password</button>
-    <div class="history-section" id="historySection" style="display:none">
-      <div class="history-title">Recent Generated</div>
-      <div class="history-list" id="historyList"></div>
-    </div>
-  </div>
-  <div class="panel" id="panel-compare">
-    <p class="analyzer-desc">Enter two passwords to compare their strength, entropy, and crack resistance side by side.</p>
-    <div class="compare-inputs">
-      <div class="compare-row"><span class="compare-mini-label" style="color:var(--a1)">A</span><input type="password" id="cmpA" placeholder="Password A…" oninput="runCompare()" autocomplete="off"></div>
-      <div class="compare-row"><span class="compare-mini-label" style="color:var(--a3)">B</span><input type="password" id="cmpB" placeholder="Password B…" oninput="runCompare()" autocomplete="off"></div>
-    </div>
-    <div class="compare-result" id="compareResult">
-      <div class="compare-bars">
-        <div class="compare-bar-row"><div class="compare-bar-label"><span>Strength Score</span><span id="cmpStrScores">A: 0 vs B: 0</span></div><div class="cmp-bar-track"><div class="cmp-bar-fill" id="cmpStrBarA" style="background:var(--a1);width:0%"></div></div><div class="cmp-bar-track" style="margin-top:4px"><div class="cmp-bar-fill" id="cmpStrBarB" style="background:var(--a3);width:0%"></div></div></div>
-        <div class="compare-bar-row"><div class="compare-bar-label"><span>Entropy (bits)</span><span id="cmpEntScores">A: 0 vs B: 0</span></div><div class="cmp-bar-track"><div class="cmp-bar-fill" id="cmpEntBarA" style="background:var(--a1);width:0%"></div></div><div class="cmp-bar-track" style="margin-top:4px"><div class="cmp-bar-fill" id="cmpEntBarB" style="background:var(--a3);width:0%"></div></div></div>
-        <div class="compare-bar-row"><div class="compare-bar-label"><span>Length</span><span id="cmpLenScores">A: 0 vs B: 0</span></div><div class="cmp-bar-track"><div class="cmp-bar-fill" id="cmpLenBarA" style="background:var(--a1);width:0%"></div></div><div class="cmp-bar-track" style="margin-top:4px"><div class="cmp-bar-fill" id="cmpLenBarB" style="background:var(--a3);width:0%"></div></div></div>
-      </div>
-      <div class="winner-badge" id="winnerBadge">🏆 —</div>
-    </div>
-  </div>
-  <div class="panel" id="panel-tips">
-    <div class="tips-grid">
-      <div class="tip-card"><div class="tip-emoji">📏</div><div class="tip-title">Length Wins</div><div class="tip-body">A 20-character password is exponentially harder to crack than a 10-character one. Aim for 16+ characters minimum.</div></div>
-      <div class="tip-card"><div class="tip-emoji">🎲</div><div class="tip-title">Use a Passphrase</div><div class="tip-body">Random words strung together are both strong and easy to type. Example: apple-storm-velvet-zeal</div></div>
-      <div class="tip-card"><div class="tip-emoji">🚫</div><div class="tip-title">Avoid Dictionary Words</div><div class="tip-body">Hackers use wordlists with millions of common passwords. Substituting a with @ or o with 0 is known and does not help much.</div></div>
-      <div class="tip-card"><div class="tip-emoji">🔑</div><div class="tip-title">Unique Per Site</div><div class="tip-body">If one site leaks your password, attackers try it everywhere. Use a password manager to keep unique credentials for every account.</div></div>
-      <div class="tip-card"><div class="tip-emoji">📱</div><div class="tip-title">Enable 2FA</div><div class="tip-body">Two-factor authentication adds a second layer even if your password is compromised. Use an authenticator app over SMS when possible.</div></div>
-      <div class="tip-card"><div class="tip-emoji">🧂</div><div class="tip-title">Entropy Matters</div><div class="tip-body">Entropy measures randomness. 128 bits is considered quantum-safe. This tool shows your entropy so you know exactly how strong you are.</div></div>
-    </div>
-  </div>
-        </div>
-<script>
-const cur = document.getElementById('cursor');
-const curRing = document.getElementById('cursor-ring');
-let mx=0, my=0, rx=0, ry=0;
-document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
-function animRing() { rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12; curRing.style.left=rx+'px'; curRing.style.top=ry+'px'; requestAnimationFrame(animRing); }
-animRing();
-document.querySelectorAll('button,input,a,[onclick]').forEach(el => {
-  el.addEventListener('mouseenter', () => { cur.style.width='20px'; cur.style.height='20px'; curRing.style.width='50px'; curRing.style.height='50px'; });
-  el.addEventListener('mouseleave', () => { cur.style.width='12px'; cur.style.height='12px'; curRing.style.width='36px'; curRing.style.height='36px'; });
-});
-
-const canvas = document.getElementById('bgCanvas');
-const ctx = canvas.getContext('2d');
-let W, H, particles=[];
-function resize() { W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
-resize();
-window.addEventListener('resize', resize);
-class Particle {
-  constructor() { this.reset(); }
-  reset() { this.x=Math.random()*W; this.y=Math.random()*H; this.vx=(Math.random()-0.5)*0.4; this.vy=(Math.random()-0.5)*0.4; this.r=Math.random()*1.5+0.5; this.alpha=Math.random()*0.4+0.1; this.color=Math.random()>0.7?'#e8ff47':Math.random()>0.5?'#2de8ff':'#b56cff'; }
-  update() { this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>W||this.y<0||this.y>H) this.reset(); }
-  draw() { ctx.save(); ctx.globalAlpha=this.alpha; ctx.fillStyle=this.color; ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill(); ctx.restore(); }
-}
-for(let i=0;i<120;i++) particles.push(new Particle());
-function animCanvas() {
-  ctx.clearRect(0,0,W,H);
-  for(let i=0;i<particles.length;i++) {
-    for(let j=i+1;j<particles.length;j++) {
-      const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
-      const d=Math.sqrt(dx*dx+dy*dy);
-      if(d<100) { ctx.save(); ctx.globalAlpha=(1-d/100)*0.08; ctx.strokeStyle='#e8ff47'; ctx.lineWidth=0.5; ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y); ctx.stroke(); ctx.restore(); }
-    }
-  }
-  particles.forEach(p=>{p.update();p.draw();});
-  requestAnimationFrame(animCanvas);
-}
-animCanvas();
-
-let stats={checked:0,generated:0,copied:0};
-function updateStat(key) { stats[key]++; animCount(document.getElementById('stat-'+key),stats[key]); }
-function animCount(el,target) { const start=parseInt(el.textContent)||0; const duration=400; const startTime=performance.now(); function step(now) { const p=Math.min((now-startTime)/duration,1); el.textContent=Math.round(start+(target-start)*p); if(p<1) requestAnimationFrame(step); } requestAnimationFrame(step); }
-
-function switchTab(name,btn) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); btn.classList.add('active'); document.getElementById('panel-'+name).classList.add('active'); }
-
-let eyeVisible=false;
-function toggleEye() { eyeVisible=!eyeVisible; const inp=document.getElementById('mainPwInput'); inp.type=eyeVisible?'text':'password'; document.getElementById('eyeBtn').textContent=eyeVisible?'🙈':'👁'; }
-
-function calcEntropy(pw) { let c=0; if(/[a-z]/.test(pw)) c+=26; if(/[A-Z]/.test(pw)) c+=26; if(/[0-9]/.test(pw)) c+=10; if(/[^a-zA-Z0-9]/.test(pw)) c+=32; if(!c) return 0; return Math.round(pw.length*Math.log2(c)); }
-function calcCharset(pw) { let n=0; if(/[a-z]/.test(pw)) n+=26; if(/[A-Z]/.test(pw)) n+=26; if(/[0-9]/.test(pw)) n+=10; if(/[^a-zA-Z0-9]/.test(pw)) n+=32; return n; }
-function crackTime(pw) { const c=calcCharset(pw)||26; const combos=Math.pow(c,pw.length); const sec=combos/1e10; if(sec<1) return 'Instant ⚡'; if(sec<60) return Math.round(sec)+' seconds'; if(sec<3600) return Math.round(sec/60)+' minutes'; if(sec<86400) return Math.round(sec/3600)+' hours'; if(sec<31536000) return Math.round(sec/86400)+' days'; if(sec<3.15e9) return Math.round(sec/31536000)+' years'; if(sec<3.15e12) return (sec/3.15e9).toFixed(1)+'K years'; if(sec<3.15e15) return (sec/3.15e12).toFixed(1)+'M years'; if(sec<3.15e18) return (sec/3.15e15).toFixed(1)+'B years'; return '∞ Uncrackable 🔒'; }
-function getStrengthScore(pw) { let s=0; if(pw.length>=8) s++; if(/[A-Z]/.test(pw)&&/[a-z]/.test(pw)) s++; if(/[0-9]/.test(pw)) s++; if(/[^a-zA-Z0-9]/.test(pw)||pw.length>=16) s++; return s; }
-
-function detectPatterns(pw) {
-  const tags=[];
-  if(!pw) return tags;
-  if(/(.)\\1{2,}/.test(pw)) tags.push({text:'Repeated chars',type:'bad'});
-  if(/012|123|234|345|456|567|678|789|890/.test(pw)) tags.push({text:'Sequential digits',type:'bad'});
-  if(/abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz/i.test(pw)) tags.push({text:'Sequential letters',type:'bad'});
-  if(/qwerty|asdf|zxcv|qazwsx/i.test(pw)) tags.push({text:'Keyboard pattern',type:'bad'});
-  if(/password|pass|letmein|welcome|admin|login|user/i.test(pw)) tags.push({text:'Common word',type:'bad'});
-  if(pw.length>=20) tags.push({text:'Long ✓',type:'good'});
-  else if(pw.length>=16) tags.push({text:'Good length ✓',type:'ok'});
-  if(/[^a-zA-Z0-9]/.test(pw)) tags.push({text:'Has symbols ✓',type:'good'});
-  if(/[0-9]/.test(pw)&&/[a-zA-Z]/.test(pw)) tags.push({text:'Mixed types ✓',type:'ok'});
-  const ent=calcEntropy(pw);
-  tags.push({text:ent+' bits entropy',type:ent>=80?'good':ent>=50?'ok':'bad'});
-  return tags;
-}
-
-function generateSuggestion(pw) { if(!pw) return ''; const syms='!@#$%^&*'; let s=pw; s+=syms[Math.floor(Math.random()*syms.length)]; s+=Math.floor(Math.random()*90+10); if(s.length<16) s+=Math.random().toString(36).slice(2,6); return s.slice(0,24); }
-
-function analyzePassword(pw) {
-  document.getElementById('charCount').textContent=pw.length+' chars';
-  updateStat('checked');
-  const c={len:pw.length>=8,upper:/[A-Z]/.test(pw),lower:/[a-z]/.test(pw),num:/[0-9]/.test(pw),sym:/[^a-zA-Z0-9]/.test(pw),long:pw.length>=16};
-  const critMap={len:'cr-len',upper:'cr-upper',lower:'cr-lower',num:'cr-num',sym:'cr-sym',long:'cr-long'};
-  Object.entries(c).forEach(([k,v])=>{ const el=document.getElementById(critMap[k]); el.classList.toggle('met',v); el.classList.toggle('warn',!v&&pw.length>0); });
-  const score=getStrengthScore(pw);
-  const scoreColors=['','#ff2d6b','#ff8c00','#2de8ff','#e8ff47'];
-  const scoreLabels=['','WEAK','FAIR','GOOD','STRONG'];
-  document.querySelectorAll('.bar-seg').forEach((b,i)=>{ b.style.background=i<score&&pw.length>0?scoreColors[score]:'var(--border2)'; });
-  const stEl=document.getElementById('strengthText');
-  stEl.textContent=pw.length>0?scoreLabels[score]:'—';
-  stEl.style.color=pw.length>0?scoreColors[score]:'var(--muted)';
-  const ent=calcEntropy(pw);
-  document.getElementById('entropyVal').textContent=ent;
-  document.getElementById('entropyFill').style.width=pw.length>0?Math.min(ent/128*100,100)+'%':'0%';
-  const crackEl=document.getElementById('crackTimeVal');
-  crackEl.textContent=pw.length>0?crackTime(pw):'—';
-  crackEl.className='info-card-val '+(score>=3?'safe':score>=2?'neutral':'danger');
-  document.getElementById('charsetVal').textContent=pw.length>0?calcCharset(pw)+' chars':'—';
-  const pTags=detectPatterns(pw);
-  const pContainer=document.getElementById('patternTags');
-  if(pw.length===0){ pContainer.innerHTML='<span class="pattern-tag info">Type a password to analyze…</span>'; }
-  else { pContainer.innerHTML=pTags.map(t=>'<span class="pattern-tag '+t.type+'">'+t.text+'</span>').join(''); }
-  const slist=document.getElementById('suggestedList');
-  if(pw.length<6){ slist.innerHTML='<div style="font-size:13px;color:var(--muted);font-family:var(--font-mono);">Suggestions appear after analysis…</div>'; }
-  else {
-    const sug1=generateSuggestion(pw);
-    const sug2=generateSuggestion(pw.split('').reverse().join(''));
-    const sug3=generateRandomPw(18);
-    slist.innerHTML=[sug1,sug2,sug3].map(s=>'<div class="similar-item"><span class="similar-pw">'+s+'</span><span class="similar-strength sim-strong">STRONG</span><button class="hist-btn" onclick="copyText(\''+s+'\')">Copy</button></div>').join('');
-  }
-}
-</script>
-<script>
-let genMode='random';
-let genOpts={upper:true,lower:true,num:true,sym:true,ambig:false,brackets:false};
-const pwHistory=[];
-const wordlist=['apple','brave','cloud','dance','eagle','flame','grace','honey','ivory','jungle','karma','lunar','magic','noble','ocean','pearl','quest','river','storm','tiger','ultra','vivid','water','xenon','yacht','zesty','amber','blaze','crisp','drift','ember','frost','gleam','haven','jazz','knack','lemon','mango','nexus','onyx','plush','quartz','rustic','solar','tidal','urban','velvet','whale','yonder','zeal'];
-
-function setGenMode(mode,btn) { genMode=mode; document.querySelectorAll('.mode-pill').forEach(p=>p.classList.remove('active')); btn.classList.add('active'); document.getElementById('random-opts').style.display=mode==='random'?'block':'none'; document.getElementById('passphrase-opts').style.display=mode==='passphrase'?'block':'none'; document.getElementById('pin-opts').style.display=mode==='pin'?'block':'none'; document.getElementById('pattern-opts').style.display=mode==='pattern'?'block':'none'; liveGenPreview(); }
-function toggleOpt(el,key) { el.classList.toggle('on'); genOpts[key]=el.classList.contains('on'); liveGenPreview(); }
-function liveGenPreview() { const pw=buildPassword(); if(!pw) return; updateGenOutput(pw,false); }
-
-function buildPassword() {
-  if(genMode==='pin') { const len=parseInt(document.getElementById('pinRange').value); return Array.from({length:len},()=>Math.floor(Math.random()*10)).join(''); }
-  if(genMode==='passphrase') { const n=parseInt(document.getElementById('wordsRange').value); return Array.from({length:n},()=>wordlist[Math.floor(Math.random()*wordlist.length)]).join('-'); }
-  if(genMode==='pattern') { const pattern=document.getElementById('patternInput').value||'LLllddss'; let result=''; for(const ch of pattern){ if(ch==='L') result+='ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random()*26)]; else if(ch==='l') result+='abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]; else if(ch==='d') result+='0123456789'[Math.floor(Math.random()*10)]; else if(ch==='s') result+='!@#$%^&*'[Math.floor(Math.random()*8)]; else result+=ch; } return result; }
-  return generateRandomPw(parseInt(document.getElementById('lenRange').value));
-}
-
-function generateRandomPw(len) {
-  const ambig='0O1lI'; let chars=''; let required='';
-  if(genOpts.upper){ let c='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; if(genOpts.ambig) c=c.split('').filter(x=>!ambig.includes(x)).join(''); chars+=c; required+=c[Math.floor(Math.random()*c.length)]; }
-  if(genOpts.lower){ let c='abcdefghijklmnopqrstuvwxyz'; if(genOpts.ambig) c=c.split('').filter(x=>!ambig.includes(x)).join(''); chars+=c; required+=c[Math.floor(Math.random()*c.length)]; }
-  if(genOpts.num){ let c='0123456789'; if(genOpts.ambig) c=c.split('').filter(x=>!ambig.includes(x)).join(''); chars+=c; required+=c[Math.floor(Math.random()*c.length)]; }
-  if(genOpts.sym){ const c='!@#$%^&*_-+='; chars+=c; required+=c[Math.floor(Math.random()*c.length)]; }
-  if(genOpts.brackets){ const c='[]{}()'; chars+=c; required+=c[Math.floor(Math.random()*c.length)]; }
-  if(!chars) return '';
-  let pw=required;
-  for(let i=required.length;i<len;i++) pw+=chars[Math.floor(Math.random()*chars.length)];
-  return pw.split('').sort(()=>Math.random()-0.5).join('');
-}
-
-function updateGenOutput(pw,addHistory=true) {
-  const el=document.getElementById('genPwText');
-  el.textContent=pw;
-  el.className='gen-pw-text'+(genMode==='passphrase'?' passphrase':'');
-  document.getElementById('genOutputCard').classList.add('generating');
-  setTimeout(()=>document.getElementById('genOutputCard').classList.remove('generating'),300);
-  const score=getStrengthScore(pw);
-  const ent=calcEntropy(pw);
-  const scoreColors=['','#ff2d6b','#ff8c00','#2de8ff','#e8ff47'];
-  const scoreLabels=['','Weak','Fair','Good','Strong'];
-  document.querySelectorAll('.gen-str-bar').forEach((b,i)=>{ b.style.background=i<score?scoreColors[score]:'var(--border2)'; });
-  document.getElementById('genStrLabel').textContent=pw?scoreLabels[score]:'—';
-  document.getElementById('genEntropyMini').textContent=ent+' bits';
-  if(addHistory){ pwHistory.unshift(pw); if(pwHistory.length>5) pwHistory.pop(); renderHistory(); }
-}
-
-function generatePw() { const pw=buildPassword(); if(!pw){toast('Enable at least one character set!');return;} updateGenOutput(pw,true); updateStat('generated'); }
-
-function renderHistory() {
-  const section=document.getElementById('historySection');
-  const list=document.getElementById('historyList');
-  if(pwHistory.length===0){section.style.display='none';return;}
-  section.style.display='block';
-  list.innerHTML=pwHistory.map(pw=>'<div class="history-item"><span class="history-pw">'+pw+'</span><div class="history-actions"><button class="hist-btn" onclick="copyText(\''+pw+'\')">Copy</button><button class="hist-btn" onclick="sendToChecker(\''+pw+'\')">Check</button></div></div>').join('');
-}
-
-function sendToChecker(pw) { const inp=document.getElementById('mainPwInput'); inp.value=pw; analyzePassword(pw); switchTab('checker',document.querySelector('.tab-btn')); toast('Sent to Checker!'); }
-function copyGen(e) { if(e) e.stopPropagation(); const pw=document.getElementById('genPwText').textContent; if(!pw||pw==='Press Generate →') return; copyText(pw); }
-function copyText(text) { navigator.clipboard.writeText(text).then(()=>{ updateStat('copied'); toast('Copied! 🎉'); }); }
-
-function runCompare() {
-  const a=document.getElementById('cmpA').value;
-  const b=document.getElementById('cmpB').value;
-  if(!a&&!b){document.getElementById('compareResult').classList.remove('show');return;}
-  document.getElementById('compareResult').classList.add('show');
-  const scoreA=getStrengthScore(a)*25, scoreB=getStrengthScore(b)*25;
-  const entA=calcEntropy(a), entB=calcEntropy(b);
-  const maxLen=Math.max(a.length,b.length,1);
-  document.getElementById('cmpStrScores').textContent='A: '+scoreA+'% vs B: '+scoreB+'%';
-  document.getElementById('cmpStrBarA').style.width=scoreA+'%';
-  document.getElementById('cmpStrBarB').style.width=scoreB+'%';
-  document.getElementById('cmpEntScores').textContent='A: '+entA+' vs B: '+entB+' bits';
-  document.getElementById('cmpEntBarA').style.width=(entA/Math.max(entA,entB,1)*100)+'%';
-  document.getElementById('cmpEntBarB').style.width=(entB/Math.max(entA,entB,1)*100)+'%';
-  document.getElementById('cmpLenScores').textContent='A: '+a.length+' vs B: '+b.length+' chars';
-  document.getElementById('cmpLenBarA').style.width=(a.length/maxLen*100)+'%';
-  document.getElementById('cmpLenBarB').style.width=(b.length/maxLen*100)+'%';
-  document.getElementById('winnerBadge').textContent=entA>entB?'🏆 Password A is stronger':entB>entA?'🏆 Password B is stronger':'🤝 Equal strength';
-}
-
-function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),2500); }
-
-liveGenPreview();
-</script>
-</body>
+    </dialog>
+  </body>
 </html>
